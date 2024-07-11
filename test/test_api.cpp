@@ -25,6 +25,21 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
     offset.set_value(r1.get_tbr()->pptr);
 }
 
+void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset)
+{
+    sleep(3);
+    cxl_shm shm = cxl_shm(length, shm_id);
+    shm.thread_init();
+    void* start = shm.get_start();
+    CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset);
+    uint64_t obj_offset = r1.data;
+    CXLObj* cxl_obj1 = (CXLObj*)((uintptr_t)shm->start + obj_offset);
+    while (cxl_obj->writer_count != 0) {
+        cxl_obj->reader_count++;
+    }
+    offset.set_value(r1.get_tbr()->pptr);
+}
+
 int main()
 {
     using namespace std;
@@ -60,6 +75,35 @@ int main()
     //     result = (status == r1.get_tbr()->pptr);
     // };
 
+    CHECK_BODY("t1 to t2") {
+        CXLRef r1 = shm.cxl_malloc_wrc(1009, 0);
+        uint64_t queue_offset = shm.create_msg_queue(2);
+        
+        uint64_t obj_offset = r1.data;
+        CXLObj* cxl_obj = (CXLObj*)((uintptr_t)shm->start + obj_offset);
+
+        while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
+            
+        }
+        if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
+            cxl_obj->writer_count++;
+            r1 = shm.cxl_malloc_wrc(1010, 0);
+            (RootRef*) tbr1 = r1->tbr;
+            tbr1->ref_cnt++;
+            cxl_obj->writer_count--;
+        }
+        shm.sent_to(queue_offset, r1);
+        std::promise<uint64_t> offset_2;
+        std::thread t1(consumer, queue_offset, std::ref(offset_2));
+        t1.join();
+        auto status = offset_2.get_future().get();
+
+        CXLRef r1_t2 = shm.get_ref(status);
+        uint64_t obj_offset_t2 = r1_t2.data;
+        CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)shm->start + obj_offset);
+        cxl_obj_t2->reader_count--;
+        result = (status == r1.get_tbr()->pptr);
+    }
     shmctl(shm_id, IPC_RMID, NULL);
 
     return print_test_summary();

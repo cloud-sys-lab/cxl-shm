@@ -53,6 +53,8 @@ typedef struct CXLObj_s {
     uint64_t next;
     std::atomic<uint64_t> ref_info;          // 8 bytes for lcid(2), ref_cnt(2), lenum(4) 
     uint64_t embedded_ref_cnt;
+    uint64_t reader_count;
+    uint64_t writer_count;
 } CXLObj;
 
 

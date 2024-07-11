@@ -81,6 +81,14 @@ CXLRef cxl_shm::cxl_malloc(uint64_t data_size, uint32_t embedded_ref_cnt)
     return cxl_ref_alloc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
 }
 
+CXLRef cxl_shm::cxl_malloc_wrc(uint64_t data_size, uint32_t embedded_ref_cnt)
+{
+    POTENTIAL_FAULT
+    RootRef_wrc* tbr = thread_base_ref_alloc_wrc();
+    POTENTIAL_FAULT
+    return cxl_ref_alloc_wrc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
+}
+
 CXLRef cxl_shm::get_ref(uint64_t offset)
 {
     RootRef* tbr = thread_base_ref_alloc();
@@ -120,6 +128,32 @@ CXLObj* cxl_shm::block_to_cxlobj(cxl_block* b, cxl_page_t* page, uint64_t embedd
     return cxl_obj;
 }
 
+CXLObj* cxl_shm::block_to_cxlobj_wrc(cxl_block* b, cxl_page_t* page, uint64_t embedded_ref_cnt)
+{
+    // cxl_page_t* page = cxl_ptr_page((void*)b);
+    POTENTIAL_FAULT
+    page->used ++;
+    POTENTIAL_FAULT
+    page->free = b->next;
+    POTENTIAL_FAULT
+    CXLObj* cxl_obj = (CXLObj*) b;
+    POTENTIAL_FAULT
+    uint64_t info = pack_ref_info(thread_id, 1, *era(thread_id, thread_id), 0, 0);
+    POTENTIAL_FAULT
+    *era(thread_id, thread_id) += 1;
+    POTENTIAL_FAULT
+    cxl_obj->ref_info = info;
+    POTENTIAL_FAULT
+    cxl_obj->embedded_ref_cnt = embedded_ref_cnt;
+    POTENTIAL_FAULT
+    cxl_obj->writer_count = 0;
+    POTENTIAL_FAULT
+    cxl_obj->reader_count = 0;
+    POTENTIAL_FAULT
+    return cxl_obj;
+}
+
+
 RootRef* cxl_shm::block_to_tbr(cxl_block* b, cxl_page_t* page)
 {
     POTENTIAL_FAULT
@@ -135,6 +169,28 @@ RootRef* cxl_shm::block_to_tbr(cxl_block* b, cxl_page_t* page)
     POTENTIAL_FAULT
     tbr->ref_cnt = 0;
     POTENTIAL_FAULT
+    return tbr;
+}
+
+
+RootRef_wrc* cxl_shm::block_to_tbr_wrc(cxl_block* b, cxl_page_t* page)
+{
+    POTENTIAL_FAULT
+    page->used ++;
+    POTENTIAL_FAULT
+    page->free = b->next;
+    POTENTIAL_FAULT
+    RootRef_wrc* tbr = (RootRef_wrc*) b;
+    POTENTIAL_FAULT
+    tbr->pptr = 0;
+    POTENTIAL_FAULT
+    tbr->in_use = 1;
+    POTENTIAL_FAULT
+    tbr->ref_cnt = 0;
+    POTENTIAL_FAULT
+    tbr->reader_count = 0;
+    POTENTIAL_FAULT
+    tbr->writer_count = 0;
     return tbr;
 }
 

@@ -72,6 +72,30 @@ CXLRef cxl_shm::cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedd
     return CXLRef(this, tbr_offset, obj_offset);
 }
 
+CXLRef cxl_shm::cxl_ref_alloc_wrc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt)
+{
+    POTENTIAL_FAULT
+    cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
+    POTENTIAL_FAULT
+    cxl_page_queue_t* pq = tls->cxl_page_queue(false, block_size);
+    POTENTIAL_FAULT
+    cxl_page_t* page = cxl_find_page(pq);
+    POTENTIAL_FAULT
+    cxl_block* block = cxl_page_malloc(pq, page);
+    POTENTIAL_FAULT
+    uint64_t tbr_offset = get_offset_for_data(start, (void*) ref);
+    POTENTIAL_FAULT
+    link_block_to_tbr(block, ref);
+    POTENTIAL_FAULT
+    FLUSH(ref);
+    FENCE;
+    CXLObj* cxl_obj = block_to_cxlobj_wrc(block, page, embedded_ref_cnt);
+    POTENTIAL_FAULT
+    uint64_t obj_offset = get_offset_for_data(start, (void*) cxl_obj) + sizeof(CXLObj);
+    POTENTIAL_FAULT
+    return CXLRef(this, tbr_offset, obj_offset);
+}
+
 void cxl_shm::cxl_free(bool special, cxl_block* b)
 {
     POTENTIAL_FAULT
