@@ -76,25 +76,30 @@ int main()
     // };
 
     CHECK_BODY("t1 to t2") {
-        CXLRef r1 = shm.cxl_malloc_wrc(1009, 0);
+        //todo ： 发送的时间-最后一个receiver收到的时间
+        CXLRef r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
+        r1->str_content = "aaa"
         uint64_t queue_offset = shm.create_msg_queue(2);
         
         uint64_t obj_offset = r1.data;
         CXLObj* cxl_obj = (CXLObj*)((uintptr_t)shm->start + obj_offset);
+        // 起t1，循环等待queue的对象
+        std::promise<uint64_t> offset_2;
+        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2));
 
         while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
             
         }
         if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
             cxl_obj->writer_count++;
-            r1 = shm.cxl_malloc_wrc(1010, 0);
+            r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
             (RootRef*) tbr1 = r1->tbr;
             tbr1->ref_cnt++;
+            r1->str_content = "bbb"
             cxl_obj->writer_count--;
         }
+        
         shm.sent_to(queue_offset, r1);
-        std::promise<uint64_t> offset_2;
-        std::thread t1(consumer, queue_offset, std::ref(offset_2));
         t1.join();
         auto status = offset_2.get_future().get();
 

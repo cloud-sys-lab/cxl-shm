@@ -84,7 +84,7 @@ CXLRef cxl_shm::cxl_malloc(uint64_t data_size, uint32_t embedded_ref_cnt)
 CXLRef cxl_shm::cxl_malloc_wrc(uint64_t data_size, uint32_t embedded_ref_cnt)
 {
     POTENTIAL_FAULT
-    RootRef_wrc* tbr = thread_base_ref_alloc_wrc();
+    RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
     return cxl_ref_alloc_wrc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
 }
