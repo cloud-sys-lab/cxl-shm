@@ -103,14 +103,14 @@ int main()
             cxl_obj->writer_count--;
         }
         
-        auto t_send = static_cast<uint64_t>(time(NULL);
+        auto t_send = static_cast<uint64_t>(time(NULL));
         shm.sent_to(queue_offset, r1);
         t1.join();
         auto status = offset_2.get_future().get();
         auto t_real_receive = t_receiver.get_future().get();
         auto t_all = t_real_receive - t_send;
 
-        std::cout << "t_all " << thread_local << std::endl;
+        std::cout << "t_all " << t_all << std::endl;
 
 
         CXLRef r1_t2 = shm.get_ref(status);
