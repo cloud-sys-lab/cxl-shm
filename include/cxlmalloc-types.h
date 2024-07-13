@@ -70,6 +70,7 @@ public:
     cxl_shm*       shm;
     uint64_t       tbr;
     uint64_t       data;
+    std::string    str_content;
 public:
     CXLRef_s(cxl_shm* _shm, uint64_t _tbr, uint64_t _data);
     CXLRef_s(const CXLRef_s& cxl_ref);

@@ -48,6 +48,7 @@ private:
     // "cxl_shm.cpp"
     void link_block_to_tbr(cxl_block* b, RootRef* tbr);
     CXLObj* block_to_cxlobj(cxl_block* b, cxl_page_t* page, uint64_t embedded_ref_cnt);
+    CXLObj* block_to_cxlobj_wrc(cxl_block* b, cxl_page_t* page, uint64_t embedded_ref_cnt);
     RootRef* block_to_tbr(cxl_block* b, cxl_page_t* page);
     cxl_message_queue_t* block_to_msg_queue(cxl_block* b, uint16_t sender_id, uint16_t receiver_id);
     std::atomic<uint32_t>* era(int x, int y);
@@ -59,6 +60,7 @@ private:
     cxl_block* cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page);
     RootRef* thread_base_ref_alloc(void);
     CXLRef cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);
+    CXLRef cxl_ref_alloc_wrc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);
     cxl_message_queue_t* msg_queue_alloc(uint16_t sender_id, uint16_t receiver_id);
     cxl_block* get_block_by_offset(uint64_t block_offset);
 
