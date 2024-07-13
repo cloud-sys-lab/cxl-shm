@@ -78,7 +78,7 @@ int main()
     CHECK_BODY("t1 to t2") {
         //todo ： 发送的时间-最后一个receiver收到的时间
         CXLRef r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
-        r1.str_content = "aaa"
+        r1.str_content = "aaa";
         uint64_t queue_offset = shm.create_msg_queue(2);
         
         uint64_t obj_offset = r1.data;
@@ -93,7 +93,7 @@ int main()
         if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
             cxl_obj->writer_count++;
             r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
-            (RootRef*) tbr1 = r1.tbr;
+            RootRef* tbr1 = r1.tbr;
             tbr1->ref_cnt++;
             r1.str_content = "bbb";
             cxl_obj->writer_count--;
@@ -105,7 +105,7 @@ int main()
 
         CXLRef r1_t2 = shm.get_ref(status);
         uint64_t obj_offset_t2 = r1_t2.data;
-        CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)start + obj_offset);
+        CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)shm.start + obj_offset);
         cxl_obj_t2->reader_count--;
         result = (status == r1.get_tbr()->pptr);
     }
