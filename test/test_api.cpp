@@ -97,7 +97,7 @@ int main()
         if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
             cxl_obj->writer_count++;
             r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
-            RootRef* tbr1 = r1.tbr;
+            RootRef* tbr1 = (RootRef*)r1.tbr;
             tbr1->ref_cnt++;
             r1.str_content = "bbb";
             cxl_obj->writer_count--;
@@ -111,7 +111,7 @@ int main()
         auto t_all = t_real_receive - t_send;
 
         std::cout << "t_all " << std::chrono::duration_cast<std::chrono::seconds>(t_all.time_since_epoch()).count() << std::endl;
-}
+
 
         CXLRef r1_t2 = shm.get_ref(status);
         uint64_t obj_offset_t2 = r1_t2.data;
