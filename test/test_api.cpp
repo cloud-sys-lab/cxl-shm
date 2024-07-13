@@ -25,7 +25,7 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
     offset.set_value(r1.get_tbr()->pptr);
 }
 
-void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::chrono::time_point<std::chrono::steady_clock> t_receiver)
+void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<uint64_t> t_receiver)
 {
     sleep(3);
     cxl_shm shm = cxl_shm(length, shm_id);
@@ -39,7 +39,7 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::ch
         cxl_obj1->reader_count++;
     }
     offset.set_value(r1.get_tbr()->pptr);
-    t_receiver.set_value(t_receiver_temp);
+    t_receiver.set_value(t_receiver_temp.count());
 }
 
 int main()
@@ -88,8 +88,8 @@ int main()
         CXLObj* cxl_obj = (CXLObj*)((uintptr_t)start + obj_offset);
         // 起t1，循环等待queue的对象
         std::promise<uint64_t> offset_2;
-        std::chrono::time_point<std::chrono::steady_clock> t_receiver;
-        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), t_receiver);
+        std::promise<uint64_t> t_receiver;
+        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
 
         while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
             
@@ -103,14 +103,14 @@ int main()
             cxl_obj->writer_count--;
         }
         
-        auto t_send = std::chrono::high_resolution_clock::now();
+        auto t_send = std::chrono::high_resolution_clock::now().count();
         shm.sent_to(queue_offset, r1);
         t1.join();
         auto status = offset_2.get_future().get();
         auto t_real_receive = t_receiver.get_future().get();
         auto t_all = t_real_receive - t_send;
 
-        std::cout << "t_all " << std::chrono::duration_cast<std::chrono::seconds>(t_all.time_since_epoch()).count() << std::endl;
+        std::cout << "t_all " << thread_local << std::endl;
 
 
         CXLRef r1_t2 = shm.get_ref(status);
