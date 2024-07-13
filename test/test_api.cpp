@@ -32,14 +32,14 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     shm.thread_init();
     void* start = shm.get_start();
     CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset);
-    auto t_receiver_temp = std::chrono::steady_clock::now();
+    auto t_receiver_temp = static_cast<uint64_t>(time(NULL));
     uint64_t obj_offset = r1.data;
     CXLObj* cxl_obj1 = (CXLObj*)((uintptr_t)start + obj_offset);
     while (cxl_obj1->writer_count != 0) {
         cxl_obj1->reader_count++;
     }
     offset.set_value(r1.get_tbr()->pptr);
-    t_receiver.set_value(t_receiver_temp.count());
+    t_receiver.set_value(t_receiver_temp);
 }
 
 int main()
@@ -103,7 +103,7 @@ int main()
             cxl_obj->writer_count--;
         }
         
-        auto t_send = std::chrono::high_resolution_clock::now().count();
+        auto t_send = static_cast<uint64_t>(time(NULL);
         shm.sent_to(queue_offset, r1);
         t1.join();
         auto status = offset_2.get_future().get();
