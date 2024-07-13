@@ -25,7 +25,7 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
     offset.set_value(r1.get_tbr()->pptr);
 }
 
-void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<uint64_t> t_receiver)
+void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<uint64_t> &t_receiver)
 {
     sleep(3);
     cxl_shm shm = cxl_shm(length, shm_id);
