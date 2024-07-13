@@ -26,6 +26,7 @@ public:
     ~cxl_shm();
     void thread_init();
     CXLRef cxl_malloc(uint64_t, uint32_t);
+    CXLRef cxl_malloc_wrc(uint64_t, uint32_t);
     CXLRef get_ref(uint64_t);
     void* get_start();
     uint32_t get_thread_id();

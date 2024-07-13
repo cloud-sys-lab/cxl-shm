@@ -138,7 +138,7 @@ CXLObj* cxl_shm::block_to_cxlobj_wrc(cxl_block* b, cxl_page_t* page, uint64_t em
     POTENTIAL_FAULT
     CXLObj* cxl_obj = (CXLObj*) b;
     POTENTIAL_FAULT
-    uint64_t info = pack_ref_info(thread_id, 1, *era(thread_id, thread_id), 0, 0);
+    uint64_t info = pack_ref_info(thread_id, 1, *era(thread_id, thread_id));
     POTENTIAL_FAULT
     *era(thread_id, thread_id) += 1;
     POTENTIAL_FAULT
@@ -172,27 +172,6 @@ RootRef* cxl_shm::block_to_tbr(cxl_block* b, cxl_page_t* page)
     return tbr;
 }
 
-
-RootRef_wrc* cxl_shm::block_to_tbr_wrc(cxl_block* b, cxl_page_t* page)
-{
-    POTENTIAL_FAULT
-    page->used ++;
-    POTENTIAL_FAULT
-    page->free = b->next;
-    POTENTIAL_FAULT
-    RootRef_wrc* tbr = (RootRef_wrc*) b;
-    POTENTIAL_FAULT
-    tbr->pptr = 0;
-    POTENTIAL_FAULT
-    tbr->in_use = 1;
-    POTENTIAL_FAULT
-    tbr->ref_cnt = 0;
-    POTENTIAL_FAULT
-    tbr->reader_count = 0;
-    POTENTIAL_FAULT
-    tbr->writer_count = 0;
-    return tbr;
-}
 
 cxl_message_queue_t* cxl_shm::block_to_msg_queue(cxl_block* b, uint16_t sender_id, uint16_t receiver_id)
 {
