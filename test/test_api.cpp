@@ -107,7 +107,7 @@ int main()
         uint64_t obj_offset_t2 = r1_t2.data;
         CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)start + obj_offset);
         cxl_obj_t2->reader_count--;
-        result = (status == r1.get_tbr()->pptr);
+        result = (status == r1->get_tbr()->pptr);
     }
     shmctl(shm_id, IPC_RMID, NULL);
 
