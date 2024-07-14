@@ -111,7 +111,7 @@ int main()
         if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
             cxl_obj->writer_count++;
             r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
-            RootRef* tbr1 = (RootRef*)r1.tbr;
+            RootRef* tbr1 = (RootRef*) get_data_at_addr(start, r1.tbr);
             tbr1->ref_cnt++;
             r1.str_content = "bbb";
             cxl_obj->writer_count--;
