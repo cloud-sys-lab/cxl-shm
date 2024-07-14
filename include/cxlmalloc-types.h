@@ -73,6 +73,7 @@ public:
     std::string    str_content;
 public:
     CXLRef_s(cxl_shm* _shm, uint64_t _tbr, uint64_t _data);
+    CXLRef_s(cxl_shm* _shm, uint64_t _tbr, uint64_t _data, std::string str_content);
     CXLRef_s(const CXLRef_s& cxl_ref);
     CXLRef_s(const CXLRef_s&& cxl_ref);
     CXLRef_s& operator=(const CXLRef_s& cxl_ref);
