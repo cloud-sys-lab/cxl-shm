@@ -78,19 +78,33 @@ int main()
     // };
 
     CHECK_BODY("t1 to t2") {
+        std::cout << "t1 to t2 1" << std::endl;
         //todo ： 发送的时间-最后一个receiver收到的时间
-        CXLRef r1 = shm.cxl_malloc_wrc(1024*1024*2, 0);
+        CXLRef r1 = shm.cxl_malloc_wrc(1, 0);
+        
+        std::cout << "t1 to t2 11" << std::endl;
         void* start = shm.get_start();
+        
+        std::cout << "t1 to t2 111" << std::endl;
         r1.str_content = "aaa";
+        
+        std::cout << "t1 to t2 1111" << std::endl;
         uint64_t queue_offset = shm.create_msg_queue(2);
         
+        std::cout << "t1 to t2 11111" << std::endl;
+        
+        
+        
+        std::cout << "t1 to t2 2" << std::endl;
         uint64_t obj_offset = r1.data;
         CXLObj* cxl_obj = (CXLObj*)((uintptr_t)start + obj_offset);
         // 起t1，循环等待queue的对象
         std::promise<uint64_t> offset_2;
         std::promise<uint64_t> t_receiver;
         std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
-
+        
+        
+        std::cout << "t1 to t2 3" << std::endl;
         while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
             
         }
@@ -102,22 +116,30 @@ int main()
             r1.str_content = "bbb";
             cxl_obj->writer_count--;
         }
-        
+            
+        std::cout << "t1 to t2 4" << std::endl;
         auto t_send = static_cast<uint64_t>(time(NULL));
         shm.sent_to(queue_offset, r1);
         t1.join();
+        auto t_receive_2 = time(NULL);
         auto status = offset_2.get_future().get();
         auto t_real_receive = t_receiver.get_future().get();
         auto t_all = t_real_receive - t_send;
+        auto t_all_2 = t_receive_2 - t_send;
+    
 
+    
         std::cout << "t_all " << t_all << std::endl;
+        std::cout << "t_all_2" << t_all_2 << std::endl;
 
-
+        std::cout << "t1 to t2 5" << std::endl;
         CXLRef r1_t2 = shm.get_ref(status);
         uint64_t obj_offset_t2 = r1_t2.data;
         CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)start + obj_offset);
         cxl_obj_t2->reader_count--;
         result = (status == r1.get_tbr()->pptr);
+        std::cout << "t1 to t2 6" << std::endl;
+        
     }
     shmctl(shm_id, IPC_RMID, NULL);
 
