@@ -202,11 +202,14 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
     uint64_t ref_info;
     uint64_t new_ref_info;
     uint16_t ref_info_cnt;
+    std::string str_content;
     do {
         POTENTIAL_FAULT
         ref_info = refed->ref_info;
         POTENTIAL_FAULT
         ref_info_cnt = get_ref_cnt_from_info(ref_info);
+
+        str_content = refed->str_content;
         POTENTIAL_FAULT
         uint32_t saw_cid = get_lcid_from_info(ref_info);
         POTENTIAL_FAULT
@@ -234,6 +237,7 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
         FLUSH(redo);
     } while(!refed->ref_info.compare_exchange_weak(ref_info, new_ref_info));
 
+    _refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
     POTENTIAL_FAULT
     _ref = _refed;
     POTENTIAL_FAULT

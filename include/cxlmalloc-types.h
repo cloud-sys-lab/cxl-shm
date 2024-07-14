@@ -55,7 +55,7 @@ typedef struct CXLObj_s {
     uint64_t embedded_ref_cnt;
     uint64_t reader_count;
     uint64_t writer_count;
-    
+    std::string str_content;
 } CXLObj;
 
 

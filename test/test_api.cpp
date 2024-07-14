@@ -135,6 +135,7 @@ int main()
                 std::cout << "change 3: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
                 tbr1->ref_cnt++;
                 r1.str_content = "bbb";
+                cxl_obj->str_content = "bbb";
                 cxl_obj->writer_count--;
             }
             std::cout << "after change , r1.get_tbr()->pptr" << r1.get_tbr()->pptr << std::endl;
@@ -164,10 +165,10 @@ int main()
 
             //std::cout << "t1 to t2 5" << std::endl;
             CXLRef* r1_t2 = (CXLRef*)get_data_at_addr(start, status);
-            std::cout << "r1_t2_content :" << r1_t2->str_content << std::endl;
 
             uint64_t obj_offset_t2 = r1_t2->data;
             CXLObj* cxl_obj_t2 = (CXLObj*)get_data_at_addr(start, obj_offset);
+            std::cout << "cxl_obj_t2_content :" << cxl_obj_t2->str_content << std::endl; 
             cxl_obj_t2->reader_count--;
             result = (status == r1.get_tbr()->pptr);
             //std::cout << "t1 to t2 6" << std::endl;
