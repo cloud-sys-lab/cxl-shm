@@ -34,7 +34,7 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset);
     auto t_receiver_temp = static_cast<uint64_t>(time(NULL));
     uint64_t obj_offset = r1.data;
-    CXLObj* cxl_obj1 = (CXLObj*)((uintptr_t)start + obj_offset);
+    CXLObj* cxl_obj1 = (CXLObj*)get_data_at_addr(start, obj_offset);
     while (cxl_obj1->writer_count != 0) {
         cxl_obj1->reader_count++;
     }
@@ -97,11 +97,10 @@ int main()
         
         std::cout << "t1 to t2 2" << std::endl;
         uint64_t obj_offset = r1.data;
-        CXLObj* cxl_obj = (CXLObj*)((uintptr_t)start + obj_offset);
+        CXLObj* cxl_obj = (CXLObj*)get_data_at_addr(start, obj_offset);
         // 起t1，循环等待queue的对象
         std::promise<uint64_t> offset_2;
         std::promise<uint64_t> t_receiver;
-        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
         
         
         std::cout << "t1 to t2 3" << std::endl;
@@ -121,9 +120,11 @@ int main()
         auto t_send = static_cast<uint64_t>(time(NULL));
         
         std::cout << "t1 to t2 4.0"<< t_send << std::endl;
-        shm.sent_to(queue_offset, r1);
+        bool send_res = shm.sent_to(queue_offset, r1);
         
-        std::cout << "t1 to t2 4.01" << std::endl;
+        std::cout << "t1 to t2 4.01 sendRes" << (send_res ? "true" : "false") << std::endl;
+        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
+        std::cout << "t1 to t2 4.02" << std::endl;
         t1.join();
         std::cout << "t1 to t2 4.1" << std::endl;
         auto t_receive_2 = time(NULL);
@@ -144,7 +145,7 @@ int main()
         std::cout << "t1 to t2 5" << std::endl;
         CXLRef r1_t2 = shm.get_ref(status);
         uint64_t obj_offset_t2 = r1_t2.data;
-        CXLObj* cxl_obj_t2 = (CXLObj*)((uintptr_t)start + obj_offset);
+        CXLObj* cxl_obj_t2 = (CXLObj*)get_data_at_addr(start, obj_offset);
         cxl_obj_t2->reader_count--;
         result = (status == r1.get_tbr()->pptr);
         std::cout << "t1 to t2 6" << std::endl;

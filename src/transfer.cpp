@@ -85,7 +85,9 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
         q->receiver_id = thread_id;
     }
     POTENTIAL_FAULT
-    while(q->start == q->end || q->buffer[q->start] == 0) {}   
+    while(q->start == q->end || q->buffer[q->start] == 0) {
+        std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end<< std::endl;
+    }   
     POTENTIAL_FAULT
     // R1
     RootRef* tbr = thread_base_ref_alloc();
