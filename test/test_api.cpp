@@ -57,8 +57,8 @@ int main()
     CHECK_BODY("malloc and free") {
         CXLRef ref = shm.cxl_malloc(32, 0);
         result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
+        shm.cxl_free(true, (cxl_block*)(&ref));
     };
-
     // CHECK_BODY("wrap ref") {
     //     CXLRef ref = shm.cxl_malloc(32, 0);
     //     uint64_t addr = shm.cxl_wrap(ref);
@@ -91,14 +91,14 @@ int main()
     // };
 
     CHECK_BODY("t1 to t2") {
-        //std::cout << "t1 to t2 1" << std::endl;
+        std::cout << "t1 to t2 1" << std::endl;
         //todo ： 发送的时间-最后一个receiver收到的时间
         CXLRef r1 = shm.cxl_malloc_wrc(10, 0);
         
-        //std::cout << "t1 to t2 11" << std::endl;
+        std::cout << "t1 to t2 11" << std::endl;
         void* start = shm.get_start();
         
-        //std::cout << "t1 to t2 111" << std::endl;
+        std::cout << "t1 to t2 111" << std::endl;
         r1.str_content = "aaa";
         
         //std::cout << "t1 to t2 1111" << std::endl;
@@ -114,6 +114,7 @@ int main()
         // 起t1，循环等待queue的对象
         std::promise<uint64_t> offset_2;
         std::promise<uint64_t> t_receiver;
+        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
         
         
         //std::cout << "t1 to t2 3" << std::endl;
@@ -136,7 +137,6 @@ int main()
         bool send_res = shm.sent_to(queue_offset, r1);
         
         //std::cout << "t1 to t2 4.01 sendRes" << (send_res ? "true" : "false") << std::endl;
-        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
         //std::cout << "t1 to t2 4.02" << std::endl;
         t1.join();
         //std::cout << "t1 to t2 4.1" << std::endl;
@@ -149,8 +149,6 @@ int main()
         //std::cout << "t1 to t2 4.3" << std::endl;
         auto t_all = t_real_receive - t_send;
         auto t_all_2 = t_receive_2 - t_send;
-    
-
 
         std::cout << "t_all :" << t_all  << ",t_real_receive" << t_real_receive << ",t_send" << t_send  << ",t_receive_2" << t_receive_2 << "，status" << status <<"，r1.get_tbr()" << r1.get_tbr() << std::endl;
         std::cout << "t_all_2 :" << t_all_2 << std::endl;
@@ -167,6 +165,7 @@ int main()
         
     };
     shmctl(shm_id, IPC_RMID, NULL);
+
 
     return print_test_summary();
 }

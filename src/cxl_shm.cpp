@@ -146,9 +146,9 @@ CXLObj* cxl_shm::block_to_cxlobj_wrc(cxl_block* b, cxl_page_t* page, uint64_t em
     POTENTIAL_FAULT
     cxl_obj->embedded_ref_cnt = embedded_ref_cnt;
     POTENTIAL_FAULT
-    cxl_obj->writer_count = (uint64_t)0;
+    //cxl_obj->writer_count = (uint64_t)0;
     POTENTIAL_FAULT
-    cxl_obj->reader_count = (uint64_t)0;
+    //cxl_obj->reader_count = (uint64_t)0;
     POTENTIAL_FAULT
     return cxl_obj;
 }

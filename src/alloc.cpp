@@ -36,6 +36,7 @@ RootRef* cxl_shm::thread_base_ref_alloc()
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT
     cxl_page_queue_t* pq = tls->cxl_page_queue(true, 16);
+    std::cout<<"thread_base_ref_alloc pq" << pq->block_size <<std::endl;
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_find_page(pq);
     POTENTIAL_FAULT
