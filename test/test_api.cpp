@@ -49,16 +49,21 @@ int main()
     //     result = (addr != 0);
     // };
 
-    // CHECK_BODY("data transfer") {
-    //     CXLRef r1 = shm.cxl_malloc(1008, 0);
-    //     uint64_t queue_offset = shm.create_msg_queue(2);
-    //     shm.sent_to(queue_offset, r1);
-    //     std::promise<uint64_t> offset_2;
-    //     std::thread t1(consumer, queue_offset, std::ref(offset_2));
-    //     t1.join();
-    //     auto status = offset_2.get_future().get();
-    //     result = (status == r1.get_tbr()->pptr);
-    // };
+    CHECK_BODY("data transfer") {
+        std::cout  << "1" << std::endl;
+        CXLRef r1 = shm.cxl_malloc(100, 0);
+        std::cout  << "11" << std::endl;
+        uint64_t queue_offset = shm.create_msg_queue(2);
+        std::cout  << "111" << std::endl;
+        shm.sent_to(queue_offset, r1);
+        std::cout  << "1111" << std::endl;
+        std::promise<uint64_t> offset_2;
+        std::thread t1(consumer, queue_offset, std::ref(offset_2));
+        t1.join();
+        auto status = offset_2.get_future().get();
+        std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
+        result = (status == r1.get_tbr()->pptr);
+    };
 
     shmctl(shm_id, IPC_RMID, NULL);
 

@@ -21,7 +21,11 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
 
     // S1
     POTENTIAL_FAULT
+    
+    std::cout  << "before link q->start" << q->start << "q->end " << q->end << "offset" <<offset<<"q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     link_reference(q->buffer[q->end], offset);
+    std::cout  << "after link q->start" << q->start << "q->end " << q->end << "offset" <<offset<<"q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
+    
     POTENTIAL_FAULT
     // S2
     q->end = (q->end + 1) % MESSAGE_BUFFER_SIZE;
@@ -53,7 +57,9 @@ CXLRef cxl_shm::cxl_unwrap(uint64_t offset)
     // R1
     RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
+    std::cout  << "before  unwrap link q->start" << q->start << "q->end " << q->end << "offset" <<offset<<"q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     link_reference(tbr->pptr, q->buffer[q->start]);
+    std::cout  << "after  unwrap link q->start" << q->start << "q->end " << q->end << "offset" <<offset<<"q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
     POTENTIAL_FAULT
