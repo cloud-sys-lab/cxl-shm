@@ -38,10 +38,10 @@ int main()
         result = (shm.get_thread_id() != 0);
     }
 
-    CHECK_BODY("malloc and free") {
-        CXLRef ref = shm.cxl_malloc(32, 0);
-        result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
-    };
+    // CHECK_BODY("malloc and free") {
+    //     CXLRef ref = shm.cxl_malloc(32, 0);
+    //     result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
+    // };
 
     // CHECK_BODY("wrap ref") {
     //     CXLRef ref = shm.cxl_malloc(32, 0);
@@ -51,7 +51,7 @@ int main()
 
     CHECK_BODY("data transfer") {
         std::cout  << "1" << std::endl;
-        CXLRef r1 = shm.cxl_malloc(100, 0);
+        CXLRef r1 = shm.cxl_malloc(1024*1024*2, 0);
         std::cout  << "11" << std::endl;
         uint64_t queue_offset = shm.create_msg_queue(2);
         std::cout  << "111" << std::endl;

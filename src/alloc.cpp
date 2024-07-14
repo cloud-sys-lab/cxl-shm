@@ -50,6 +50,7 @@ RootRef* cxl_shm::thread_base_ref_alloc()
 
 CXLRef cxl_shm::cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt)
 {
+    std::cout << "cxl_ref_alloc blocksize " << block_size << std::endl;
     POTENTIAL_FAULT
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT

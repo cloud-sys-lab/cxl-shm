@@ -91,6 +91,9 @@ CXLRef cxl_shm::get_ref(uint64_t offset)
 
 void cxl_shm::link_block_to_tbr(cxl_block* b, RootRef* tbr)
 {
+    if (b == NULL) {
+        return ;
+    }
     POTENTIAL_FAULT
     tbr->pptr = get_offset_for_data(start, (void*) b);
     POTENTIAL_FAULT

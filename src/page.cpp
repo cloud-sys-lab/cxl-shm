@@ -147,6 +147,10 @@ cxl_page_t* cxl_shm::cxl_page_fresh(cxl_page_queue_t* pq)
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_segment_page_alloc(pq->block_size);
     POTENTIAL_FAULT
+    std::cout << "cxl_page_fresh blocksize " << pq->block_size << std::endl;
+    if (page == NULL) {
+        return NULL;
+    }
     cxl_page_init(special, page, pq->block_size);
     POTENTIAL_FAULT
     if(pq == &tls->pages[1])
@@ -163,6 +167,7 @@ cxl_page_t* cxl_shm::cxl_page_fresh(cxl_page_queue_t* pq)
 // Initialize a fresh page
 void cxl_shm::cxl_page_init(bool special, cxl_page_t* page, uint64_t block_size)
 {
+    std::cout << "cxl_page_init blocksize 1： " << block_size << std::endl;
     POTENTIAL_FAULT
     page->local_free = 0;
     POTENTIAL_FAULT
@@ -182,6 +187,7 @@ void cxl_shm::cxl_page_init(bool special, cxl_page_t* page, uint64_t block_size)
     POTENTIAL_FAULT
     cxl_block* start_block = cxl_page_block_at(page_area, block_size, 0);
     POTENTIAL_FAULT
+    std::cout << "cxl_page_init blocksize 2：" << block_size << std::endl;
     cxl_block* last_block = cxl_page_block_at(page_area, block_size, PAGE_SIZE / block_size - 1);
     POTENTIAL_FAULT
     cxl_block* block = start_block;

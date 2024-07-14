@@ -54,9 +54,11 @@ cxl_segment_t* cxl_shm::cxl_segment_alloc()
         count++;
         if(SEGMENTS_AREA_START + count*SEGMENT_SIZE > size)
         {
+            std::cout<<"1 SEGMENTS_AREA_START + count*SEGMENT_SIZE:" << SEGMENTS_AREA_START + count*SEGMENT_SIZE << "size" << size <<std::endl;
             std::cout<<"memory alloc fail for no more segment"<<std::endl;
             return NULL;
         }
+        std::cout<<"2 SEGMENTS_AREA_START + count*SEGMENT_SIZE:" << SEGMENTS_AREA_START + count*SEGMENT_SIZE << "size" << size <<std::endl;
         POTENTIAL_FAULT
         offset += sizeof(cxl_segment_allocation_state_t);
         POTENTIAL_FAULT
