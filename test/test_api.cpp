@@ -57,8 +57,8 @@ int main()
     CHECK_BODY("malloc and free") {
         CXLRef ref = shm.cxl_malloc(32, 0);
         result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
+        shm.cxl_free(true, (cxl_block*)(&ref));
     };
-
     // CHECK_BODY("wrap ref") {
     //     CXLRef ref = shm.cxl_malloc(32, 0);
     //     uint64_t addr = shm.cxl_wrap(ref);
@@ -149,8 +149,6 @@ int main()
         //std::cout << "t1 to t2 4.3" << std::endl;
         auto t_all = t_real_receive - t_send;
         auto t_all_2 = t_receive_2 - t_send;
-    
-
 
         std::cout << "t_all :" << t_all  << ",t_real_receive" << t_real_receive << ",t_send" << t_send  << ",t_receive_2" << t_receive_2 << "，status" << status <<"，r1.get_tbr()" << r1.get_tbr() << std::endl;
         std::cout << "t_all_2 :" << t_all_2 << std::endl;
@@ -167,6 +165,7 @@ int main()
         
     };
     shmctl(shm_id, IPC_RMID, NULL);
+
 
     return print_test_summary();
 }

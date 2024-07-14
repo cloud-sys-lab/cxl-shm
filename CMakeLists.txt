@@ -11,7 +11,7 @@ project (cxlmalloc
 # WARNING_FLAGS:=-ftrapv -Wreturn-type -W -Wall \
 # -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter
 
-option(USE_CXL "option for using cxl devic" ON)
+option(USE_CXL "option for using cxl devic" OFF)
 # if you would like to disbale, use '-D USE_CXL=OFF'
 
 if(USE_CXL)
@@ -39,8 +39,10 @@ set (CMAKE_BUILD_TYPE
   FORCE)
 
 if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE "Release")
+  set (CMAKE_BUILD_TYPE "Debug")
 endif ()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_EXE_LINKER_FLAGS "-latomic")
 
