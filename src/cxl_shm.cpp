@@ -85,6 +85,7 @@ CXLRef cxl_shm::cxl_malloc_wrc(uint64_t data_size, uint32_t embedded_ref_cnt)
 {
     POTENTIAL_FAULT
     RootRef* tbr = thread_base_ref_alloc();
+    std::cout << "cxl_malloc_wrc: , tbr.get_tbr()->pptr:" << tbr->pptr << std::endl;
     POTENTIAL_FAULT
     return cxl_ref_alloc_wrc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
 }
@@ -101,6 +102,7 @@ void cxl_shm::link_block_to_tbr(cxl_block* b, RootRef* tbr)
 {
     POTENTIAL_FAULT
     tbr->pptr = get_offset_for_data(start, (void*) b);
+    std::cout << "link_block_to_tbr: , r1.get_tbr()->pptr:" << tbr->pptr << std::endl;
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
     POTENTIAL_FAULT
@@ -346,5 +348,6 @@ cxl_page_queue_t* cxl_thread_local_state_s::cxl_page_queue(bool special, uint64_
             return &pages[1];
         }
     }
+    std::cout << "cxl_page_queue final size" << ((size-1)>>4)+2 << std::endl;
     return &pages[((size-1)>>4)+2];
 }

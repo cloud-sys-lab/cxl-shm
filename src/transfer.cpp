@@ -23,11 +23,11 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     POTENTIAL_FAULT
     std::cout  << "before  link q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     link_reference(q->buffer[q->end], offset);
-    std::cout  << "after  link q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     
     POTENTIAL_FAULT
     // S2
     q->end = (q->end + 1) % MESSAGE_BUFFER_SIZE;
+    std::cout  << "after  link q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     return true;
 }
@@ -88,11 +88,11 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
         q->receiver_id = thread_id;
     }
     POTENTIAL_FAULT
-    std::cout  << "before unwrap while time:" <<  static_cast<uint64_t>(time(NULL)) << std::endl;
+    std::cout  << "before unwrap while time:" <<  static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     while(q->start == q->end || q->buffer[q->start] == 0) {
         //std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     }   
-    std::cout  << "after unwrap while time:" << static_cast<uint64_t>(time(NULL)) << std::endl;
+    std::cout  << "after unwrap while time:" << static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     POTENTIAL_FAULT
     // R1
     RootRef* tbr = thread_base_ref_alloc();

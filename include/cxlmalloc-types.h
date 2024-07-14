@@ -32,7 +32,7 @@
 # define SEGMENTS_AREA_START         (ZU(1)<<27)
 
 # define CXL_BIN_SIZE   (66U)
-
+//# define CXL_BIN_SIZE   (1024U)
 # define MESSAGE_BUFFER_SIZE (16)
 
 # define MAX_THREAD (1024)
@@ -55,6 +55,7 @@ typedef struct CXLObj_s {
     uint64_t embedded_ref_cnt;
     uint64_t reader_count;
     uint64_t writer_count;
+    
 } CXLObj;
 
 
