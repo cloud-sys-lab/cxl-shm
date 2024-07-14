@@ -119,11 +119,20 @@ int main()
             
         std::cout << "t1 to t2 4" << std::endl;
         auto t_send = static_cast<uint64_t>(time(NULL));
+        
+        std::cout << "t1 to t2 4.0"<< t_send << std::endl;
         shm.sent_to(queue_offset, r1);
+        
+        std::cout << "t1 to t2 4.01" << std::endl;
         t1.join();
+        std::cout << "t1 to t2 4.1" << std::endl;
         auto t_receive_2 = time(NULL);
         auto status = offset_2.get_future().get();
+        
+        std::cout << "t1 to t2 4.2" << std::endl;
         auto t_real_receive = t_receiver.get_future().get();
+        
+        std::cout << "t1 to t2 4.3" << std::endl;
         auto t_all = t_real_receive - t_send;
         auto t_all_2 = t_receive_2 - t_send;
     
