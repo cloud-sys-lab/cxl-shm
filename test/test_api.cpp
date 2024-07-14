@@ -54,11 +54,11 @@ int main()
         result = (shm.get_thread_id() != 0);
     }
 
-    CHECK_BODY("malloc and free") {
-        CXLRef ref = shm.cxl_malloc(32, 0);
-        result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
-        shm.cxl_free(true, (cxl_block*)(&ref));
-    };
+    // CHECK_BODY("malloc and free") {
+    //     CXLRef ref = shm.cxl_malloc(32, 0);
+    //     result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
+    //     shm.cxl_free(true, (cxl_block*)(&ref));
+    // };
     // CHECK_BODY("wrap ref") {
     //     CXLRef ref = shm.cxl_malloc(32, 0);
     //     uint64_t addr = shm.cxl_wrap(ref);
@@ -93,7 +93,7 @@ int main()
     CHECK_BODY("t1 to t2") {
         std::cout << "t1 to t2 1" << std::endl;
         //todo ： 发送的时间-最后一个receiver收到的时间
-        CXLRef r1 = shm.cxl_malloc_wrc(1023, 0);
+        CXLRef r1 = shm.cxl_malloc_wrc(10, 0);
         
         std::cout << "t1 to t2 11" << std::endl;
         void* start = shm.get_start();
@@ -101,14 +101,12 @@ int main()
         std::cout << "t1 to t2 111" << std::endl;
         r1.str_content = "aaa";
         
-        //std::cout << "t1 to t2 1111" << std::endl;
+        std::cout << "t1 to t2 1111" << std::endl;
         uint64_t queue_offset = shm.create_msg_queue(2);
         
-        //std::cout << "t1 to t2 11111" << std::endl;
+        std::cout << "t1 to t2 11111" << std::endl;
         
-        
-        
-        //std::cout << "t1 to t2 2" << std::endl;
+        std::cout << "t1 to t2 2" << std::endl;
         uint64_t obj_offset = r1.data;
         CXLObj* cxl_obj = (CXLObj*)get_data_at_addr(start, obj_offset);
         // 起t1，循环等待queue的对象

@@ -213,20 +213,20 @@ void cxl_shm::cxl_page_init(bool special, cxl_page_t* page, uint64_t block_size)
     {
         POTENTIAL_FAULT
         
-        std::cout<<"cxl_page_init block_size6," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+        //std::cout<<"cxl_page_init block_size6," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
         if(special) memset(block, 0, sizeof(block_size));
         else memset(block, 0, sizeof(CXLObj));
         POTENTIAL_FAULT
         
-        std::cout<<"cxl_page_init block_size7," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+        //std::cout<<"cxl_page_init block_size7," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
         cxl_block* next = (cxl_block*)((char*)block + block_size);
-        std::cout<<"cxl_page_init block_size8," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+        //std::cout<<"cxl_page_init block_size8," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
         POTENTIAL_FAULT
         block->next = get_offset_for_data(start, next);
-        std::cout<<"cxl_page_init block_size9," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+        //std::cout<<"cxl_page_init block_size9," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
         POTENTIAL_FAULT
         block = next;
-        std::cout<<"cxl_page_init block_size10," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+        //std::cout<<"cxl_page_init block_size10," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
         POTENTIAL_FAULT
     }
     POTENTIAL_FAULT
