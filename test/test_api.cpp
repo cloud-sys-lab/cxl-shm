@@ -91,14 +91,14 @@ int main()
     // };
 
     CHECK_BODY("t1 to t2") {
-        //std::cout << "t1 to t2 1" << std::endl;
+        std::cout << "t1 to t2 1" << std::endl;
         //todo ： 发送的时间-最后一个receiver收到的时间
-        CXLRef r1 = shm.cxl_malloc_wrc(10, 0);
+        CXLRef r1 = shm.cxl_malloc_wrc(1023, 0);
         
-        //std::cout << "t1 to t2 11" << std::endl;
+        std::cout << "t1 to t2 11" << std::endl;
         void* start = shm.get_start();
         
-        //std::cout << "t1 to t2 111" << std::endl;
+        std::cout << "t1 to t2 111" << std::endl;
         r1.str_content = "aaa";
         
         //std::cout << "t1 to t2 1111" << std::endl;
@@ -114,6 +114,7 @@ int main()
         // 起t1，循环等待queue的对象
         std::promise<uint64_t> offset_2;
         std::promise<uint64_t> t_receiver;
+        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
         
         
         //std::cout << "t1 to t2 3" << std::endl;
@@ -136,7 +137,6 @@ int main()
         bool send_res = shm.sent_to(queue_offset, r1);
         
         //std::cout << "t1 to t2 4.01 sendRes" << (send_res ? "true" : "false") << std::endl;
-        std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
         //std::cout << "t1 to t2 4.02" << std::endl;
         t1.join();
         //std::cout << "t1 to t2 4.1" << std::endl;
