@@ -56,6 +56,27 @@ RootRef* cxl_shm::thread_base_ref_alloc()
     return tbr;
 }
 
+RootRef* cxl_shm::thread_base_ref_alloc(cxl_thread_local_state_t* tls)
+{
+    // 可以优化加锁的位置
+    // std::lock_guard<std::mutex> guard(g_pages_mutex);
+    POTENTIAL_FAULT
+    cxl_page_queue_t* pq = tls->cxl_page_queue(true, 16);
+    // std::cout<<"thread_base_ref_alloc pq" << pq->block_size <<std::endl;
+    POTENTIAL_FAULT
+    cxl_page_t* page = cxl_find_page(pq);
+    POTENTIAL_FAULT
+    
+    // std::cout << "thread_base_ref_alloc p_s" << pq->block_size << std::endl;
+    cxl_block* block = cxl_page_malloc(pq, page);
+    POTENTIAL_FAULT
+    if(block == NULL) return NULL;
+    POTENTIAL_FAULT
+    RootRef* tbr = block_to_tbr(block, page);
+    POTENTIAL_FAULT
+    return tbr;
+}
+
 CXLRef cxl_shm::cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt)
 {
     POTENTIAL_FAULT

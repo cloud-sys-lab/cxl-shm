@@ -41,7 +41,7 @@ public:
     bool sent_to(uint64_t queue_offset, CXLRef& ref);
     CXLRef cxl_unwrap(uint64_t offset);
     CXLRef cxl_unwrap_wrc(uint64_t offset);
-    CXLRef cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thread_local_state_t* tls);
+    CXLRef cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thread_local_state_t* tls, RootRef* tbr);
     uint64_t create_msg_queue(uint16_t dst_id);
 
     uint64_t get_tls_offset();
@@ -50,6 +50,7 @@ public:
     // "hash_index.cpp"
     void put(uint64_t key, uint64_t value);
     bool get(uint64_t key, uint64_t& value);
+    RootRef* thread_base_ref_alloc(cxl_thread_local_state_t* tls);
 private:
     // "cxl_shm.cpp"
     void link_block_to_tbr(cxl_block* b, RootRef* tbr);
@@ -65,6 +66,7 @@ private:
     cxl_page_t* cxl_find_page(cxl_page_queue_t* pq);
     cxl_block* cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page);
     RootRef* thread_base_ref_alloc(void);
+    
     CXLRef cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);
     CXLRef cxl_ref_alloc_wrc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);
     cxl_message_queue_t* msg_queue_alloc(uint16_t sender_id, uint16_t receiver_id);

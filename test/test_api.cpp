@@ -11,6 +11,7 @@
 #include "cxlmalloc-internal.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <vector>
 #include "test_helper.h"
 
 #include "cxlmalloc.h"
@@ -46,14 +47,16 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
 void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<std::chrono::time_point<std::chrono::system_clock> > &t_receiver)
 {
     // sleep(3);
+    
     cxl_shm shm = cxl_shm(length, shm_id);
 
     shm.thread_init();
     void* start = shm.get_start();
 
+
     auto t_start = std::chrono::high_resolution_clock::now();
     cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, queue_offset);
-    std::cout << "inside of cxl_unwrap_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // std::cout << "inside consumer_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     POTENTIAL_FAULT
     // update receiver queue
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, shm.get_tls_offset());
@@ -67,22 +70,29 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
         POTENTIAL_FAULT
         q->receiver_id = shm.get_thread_id();
     }
-
+    std::vector<RootRef*> vec;
+    for (int i = 0; i < counter; i ++) {
+        RootRef* tbr = shm.thread_base_ref_alloc(tls);
+        vec.push_back(tbr);
+    }
+    
+    RootRef* tbr;
     // why this for loop?
     for (int i = 0; i < counter; i+=1) {
-        auto t_start = std::chrono::high_resolution_clock::now();
-        CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls);
-        std::cout << "duration of cxl_unwrap_wrc" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+        tbr = vec[i];
+        // auto t_start = std::chrono::high_resolution_clock::now();
+        CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls, tbr);
+        // std::cout << "duration of cxl_unwrap_wrc" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
         
         uint64_t obj_offset = r1.data;
-        t_start = std::chrono::high_resolution_clock::now();
+        // t_start = std::chrono::high_resolution_clock::now();
         CXLObj* cxl_obj1 = (CXLObj*)get_data_at_addr(start, obj_offset);
-        std::cout << "duration of get_data_at_addr: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+        // std::cout << "duration of get_data_at_addr: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
         
-        t_start = std::chrono::high_resolution_clock::now();
+        // t_start = std::chrono::high_resolution_clock::now();
         while (cxl_obj1->writer_count != 0) {
         }
-        std::cout << "duration of while loop: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+        // std::cout << "duration of while loop: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
         // offset.set_value(r1.get_tbr()->pptr);
 //        t_receiver.set_value(t_receiver_temp);
     }
@@ -177,16 +187,22 @@ auto test_warpper() {
         #endif        
 
         // auto t_send = static_cast<uint64_t>(time(NULL));
-
+        std::vector<CXLRef> block_vec;
+        for (int i = 0; i < counter; i++) {
+            CXLRef r = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
+            block_vec.push_back(r);
+        }
+            
+        
+        sleep(5);
         auto t_start = std::chrono::high_resolution_clock::now();
-        CXLRef r1 = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
-        for (int i = DATA_SIZE_BLOCK; i <= DATA_SIZE_MESSAGE; i+=DATA_SIZE_BLOCK) {
+        for (int i = 0; i < counter; i++) {
+            CXLRef r1 = block_vec[i];
         //  std::cout << "t1 to t2 i:" << i << std::endl;
             //todo ： 发送的时间-最后一个receiver收到的时间
             
             
             //std::cout << "t1 to t2 111" << std::endl;
-            r1.str_content = "aaa";
             //  << "t1 to t2 11 , r1.get_tbr()->pptr" << r1.get_tbr()->pptr << std::endl;
             
             //std::cout << "t1 to t2 2" << std::endl;
@@ -210,7 +226,7 @@ auto test_warpper() {
                 // std::cout << "change 3: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
                 tbr1->ref_cnt++;
     
-                r1.str_content = "bbb";
+                //r1.str_content = "bbb";
                 cxl_obj->str_content = "bbb";
                     
                 cxl_obj->writer_count--;

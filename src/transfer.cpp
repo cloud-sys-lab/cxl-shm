@@ -73,12 +73,12 @@ CXLRef cxl_shm::cxl_unwrap(uint64_t offset)
 
 
 
-CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thread_local_state_t* tls)
+CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thread_local_state_t* tls, RootRef* tbr)
 {
     // POTENTIAL_FAULT
-    auto t_start = std::chrono::high_resolution_clock::now();
+    //auto t_start = std::chrono::high_resolution_clock::now();
     // cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, offset);
-    std::cout << "inside of cxl_unwrap_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // std::cout << "inside of cxl_unwrap_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     // POTENTIAL_FAULT
     // // update receiver queue
     // cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
@@ -93,27 +93,27 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thre
     //     q->receiver_id = thread_id;
     // }
     // POTENTIAL_FAULT
-    t_start = std::chrono::high_resolution_clock::now();
+    // t_start = std::chrono::high_resolution_clock::now();
     // std::cout  << "before unwrap while time:" <<  static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     while(q->start == q->end || q->buffer[q->start] == 0) {
         
         //std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     }
-    std::cout << "inside of cxl_unwrap_wrc: while" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // std::cout << "inside of cxl_unwrap_wrc: while" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     
     // std::cout  << "after unwrap while time:" << static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     POTENTIAL_FAULT
     // R1
     //t_start = std::chrono::high_resolution_clock::now();
-    RootRef* tbr = thread_base_ref_alloc();
-    std::cout << "inside of cxl_unwrap_wrc: thread_base_ref_alloc" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    //RootRef* tbr = thread_base_ref_alloc(tls);
+    // std::cout << "inside of cxl_unwrap_wrc: thread_base_ref_alloc" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     
     POTENTIAL_FAULT
 
     // std::cout  << "tbr:" << tbr << std::flush;
     //t_start = std::chrono::high_resolution_clock::now();
     link_reference(tbr->pptr, q->buffer[q->start]);
-    std::cout << "inside of cxl_unwrap_wrc: link_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // std::cout << "inside of cxl_unwrap_wrc: link_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
@@ -121,7 +121,7 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thre
     // R2
     //t_start = std::chrono::high_resolution_clock::now();
     unlink_reference(q->buffer[q->start], q->buffer[q->start]);
-    std::cout << "inside of cxl_unwrap_wrc: unlink_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // std::cout << "inside of cxl_unwrap_wrc: unlink_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
 
     // std::cout  << "unwrap info q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
