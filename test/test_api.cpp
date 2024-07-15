@@ -192,8 +192,8 @@ auto test_warpper() {
             CXLRef r = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
             block_vec.push_back(r);
         }
-            
-        
+
+
         sleep(5);
         auto t_start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < counter; i++) {
