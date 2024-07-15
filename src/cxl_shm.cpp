@@ -198,6 +198,7 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT
     CXLObj* refed = (CXLObj*) get_data_at_addr(start, _refed);
+    refed->str_content = "test";
     POTENTIAL_FAULT
     uint64_t ref_info;
     uint64_t new_ref_info;
@@ -237,7 +238,8 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
         FLUSH(redo);
     } while(!refed->ref_info.compare_exchange_weak(ref_info, new_ref_info));
 
-    _refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
+    //refed->str_content = str_content;
+    refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
     POTENTIAL_FAULT
     _ref = _refed;
     POTENTIAL_FAULT

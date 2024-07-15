@@ -31,6 +31,7 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     cxl_shm shm = cxl_shm(length, shm_id);
     shm.thread_init();
     void* start = shm.get_start();
+    // 需要在加一
     CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset);
     auto t_receiver_temp = static_cast<uint64_t>(time(NULL));
     uint64_t obj_offset = r1.data;
@@ -40,6 +41,10 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     offset.set_value(r1.get_tbr()->pptr);
     t_receiver.set_value(t_receiver_temp);
 }
+std::vector<size_t> test_sizes = {
+        8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
+        131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216,
+        33554432, 67108864, 134217728};
 
 int main()
 {
@@ -57,7 +62,7 @@ int main()
         shm.thread_init();
         result = (shm.get_thread_id() != 0);
     }
-
+    
     // CHECK_BODY("malloc and free") {
     //     CXLRef ref = shm.cxl_malloc(32, 0);
     //     result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
@@ -107,18 +112,27 @@ int main()
             r1.str_content = "aaa";
             
             //std::cout << "t1 to t2 1111" << std::endl;
-            uint64_t queue_offset = shm.create_msg_queue(2);
+            uint64_t queue_offset1 = shm.create_msg_queue(2);
+            uint64_t queue_offset2 = shm.create_msg_queue(2);
+            uint64_t queue_offset3 = shm.create_msg_queue(2);
             
+
             //std::cout << "t1 to t2 11111" << std::endl;
             
             //std::cout << "t1 to t2 2" << std::endl;
             uint64_t obj_offset = r1.data;
             CXLObj* cxl_obj = (CXLObj*)get_data_at_addr(start, obj_offset);
             // 起t1，循环等待queue的对象
+            std::promise<uint64_t> offset_1;
             std::promise<uint64_t> offset_2;
-            std::promise<uint64_t> t_receiver;
-            std::thread t1(consumer_wrc, queue_offset, std::ref(offset_2), std::ref(t_receiver));
+            std::promise<uint64_t> offset_3;
             
+            std::promise<uint64_t> t_receiver1;
+            std::promise<uint64_t> t_receiver2;
+            std::promise<uint64_t> t_receiver3;
+            std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
+            std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
+            std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
             
             //std::cout << "t1 to t2 3" << std::endl;
             while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
@@ -128,14 +142,16 @@ int main()
             if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
                 cxl_obj->writer_count++;
                 std::cout << "change 1: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
-                r1 = shm.cxl_malloc_wrc(100, 0);
-                std::cout << "change 2: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
+                //r1 = shm.cxl_malloc_wrc(100, 0);
+                //std::cout << "change 2: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
                 RootRef* tbr1 = (RootRef*) get_data_at_addr(start, r1.tbr);
                 
                 std::cout << "change 3: , r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
                 tbr1->ref_cnt++;
+    
                 r1.str_content = "bbb";
                 cxl_obj->str_content = "bbb";
+                    
                 cxl_obj->writer_count--;
             }
             std::cout << "after change , r1.get_tbr()->pptr" << r1.get_tbr()->pptr << std::endl;
@@ -144,33 +160,54 @@ int main()
             auto t_send = static_cast<uint64_t>(time(NULL));
             
             std::cout << "t1 to t2 4.0,"<< t_send << "r1.get_tbr()->pptr" << r1.get_tbr()->pptr << std::endl;
-            bool send_res = shm.sent_to(queue_offset, r1);
+            bool send_res1    = shm.sent_to(queue_offset1, r1);
+            bool send_res2    = shm.sent_to(queue_offset2, r1);
+            bool send_res3    = shm.sent_to(queue_offset3, r1);
+
+            std::cout << "t1 to t2 4.01 sendRes:" << (send_res1 ? "true" : "false") << std::endl;
+            std::cout << "t1 to t2 4.01 sendRes:" << (send_res2 ? "true" : "false") << std::endl;
+            std::cout << "t1 to t2 4.01 sendRes:" << (send_res3 ? "true" : "false") << std::endl;
             
-            std::cout << "t1 to t2 4.01 sendRes:" << (send_res ? "true" : "false") << std::endl;
             //std::cout << "t1 to t2 4.02" << std::endl;
             t1.join();
+            t2.join();
+            t3.join();
+            
+            auto t_receiver_final = static_cast<uint64_t>(time(NULL));
             //std::cout << "t1 to t2 4.1" << std::endl;
             auto t_receive_2 = time(NULL);
-            auto status = offset_2.get_future().get();
+            auto status1 = offset_1.get_future().get();
+            auto status2 = offset_2.get_future().get();
+            auto status3 = offset_3.get_future().get();
             
             //std::cout << "t1 to t2 4.2" << std::endl;
-            auto t_real_receive = t_receiver.get_future().get();
+            auto t_real_receive1 = t_receiver1.get_future().get();
+            auto t_real_receive2 = t_receiver2.get_future().get();
+            auto t_real_receive3 = t_receiver3.get_future().get();
+
+
             
             //std::cout << "t1 to t2 4.3" << std::endl;
-            auto t_all = t_real_receive - t_send;
+            auto t_all = t_receiver_final - t_send;
+            //取最大的时间
+            //if () 
             auto t_all_2 = t_receive_2 - t_send;
-
-            std::cout << "t_all :" << t_all  << ",t_real_receive" << t_real_receive << ",t_send" << t_send  << ",t_receive_2" << t_receive_2 << "，status" << status <<"，r1.get_tbr()" << r1.get_tbr() << std::endl;
+            
+            std::cout << "t_all :" << t_all  << ",t_real_receive" << t_real_receive1 << ",t_send" << t_send  << ",t_receive_2" << t_receive_2 << "，status" << status <<"，r1.get_tbr()" << r1.get_tbr() << std::endl;
             std::cout << "t_all_2 :" << t_all_2 << std::endl;
 
             //std::cout << "t1 to t2 5" << std::endl;
-            CXLRef* r1_t2 = (CXLRef*)get_data_at_addr(start, status);
+            CXLRef* r1_t2_1 = (CXLRef*)get_data_at_addr(start, status1);
+            CXLRef* r1_t2_2 = (CXLRef*)get_data_at_addr(start, status2);
+            CXLRef* r1_t2_3 = (CXLRef*)get_data_at_addr(start, status3);
 
-            uint64_t obj_offset_t2 = r1_t2->data;
+            uint64_t obj_offset_t2_1 = r1_t2_1->data;
+            uint64_t obj_offset_t2_2 = r1_t2_2->data;
+            uint64_t obj_offset_t2_3 = r1_t2_3->data;
             CXLObj* cxl_obj_t2 = (CXLObj*)get_data_at_addr(start, obj_offset);
             std::cout << "cxl_obj_t2_content :" << cxl_obj_t2->str_content << std::endl; 
             cxl_obj_t2->reader_count--;
-            result = (status == r1.get_tbr()->pptr);
+            result = (status2 == r1.get_tbr()->pptr);
             //std::cout << "t1 to t2 6" << std::endl;
             shmctl(shm_id, IPC_RMID, NULL);
         }

@@ -8,6 +8,7 @@ uint64_t cxl_shm::cxl_wrap(CXLRef& ref)
 
 bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
 {
+    // reset_flag 初始话
     POTENTIAL_FAULT
     uint64_t offset = ref.get_tbr()->pptr;
     POTENTIAL_FAULT
@@ -17,8 +18,6 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     {
         return false;
     }
-    
-
     // S1
     POTENTIAL_FAULT
     std::cout  << "before  link q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
@@ -90,8 +89,10 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
     POTENTIAL_FAULT
     std::cout  << "before unwrap while time:" <<  static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     while(q->start == q->end || q->buffer[q->start] == 0) {
-        //std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
-    }   
+        
+        std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
+    }
+    
     std::cout  << "after unwrap while time:" << static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     POTENTIAL_FAULT
     // R1
