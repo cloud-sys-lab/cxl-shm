@@ -1,5 +1,8 @@
 #include "cxlmalloc.h"
 #include "cxlmalloc-internal.h"
+#include <mutex>
+
+std::mutex g_pages_mutex;
 
 cxl_page_t* cxl_shm::cxl_find_page(cxl_page_queue_t* pq)
 {
@@ -32,6 +35,8 @@ cxl_block* cxl_shm::cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page)
 
 RootRef* cxl_shm::thread_base_ref_alloc()
 {
+    // 可以优化加锁的位置
+    std::lock_guard<std::mutex> guard(g_pages_mutex);
     POTENTIAL_FAULT
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT

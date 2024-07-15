@@ -32,6 +32,7 @@
 # define SEGMENTS_AREA_START         (ZU(1)<<27)
 
 # define CXL_BIN_SIZE   (66U)
+// # define CXL_BIN_SIZE (128U)
 //# define CXL_BIN_SIZE   (1024U)
 # define MESSAGE_BUFFER_SIZE (16)
 

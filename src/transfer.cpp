@@ -99,6 +99,8 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
     // R1
     RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
+
+    std::cout  << "tbr:" << tbr << std::flush;
     link_reference(tbr->pptr, q->buffer[q->start]);
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
