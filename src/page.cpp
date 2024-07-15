@@ -151,10 +151,10 @@ cxl_page_t* cxl_shm::cxl_page_fresh(cxl_page_queue_t* pq)
         return NULL;
     }
     POTENTIAL_FAULT
-    std::cout<<"cxl_page_fresh1  block_size" << pq->block_size <<std::endl;
+    // std::cout<<"cxl_page_fresh1  block_size" << pq->block_size <<std::endl;
     cxl_page_init(special, page, pq->block_size);
     
-    std::cout<<"cxl_page_fresh2  block_size" << pq->block_size <<std::endl;
+    // std::cout<<"cxl_page_fresh2  block_size" << pq->block_size <<std::endl;
     POTENTIAL_FAULT
     if(pq == &tls->pages[1])
         page->is_msg_queue_page = true;
@@ -171,41 +171,41 @@ cxl_page_t* cxl_shm::cxl_page_fresh(cxl_page_queue_t* pq)
 // Initialize a fresh page
 void cxl_shm::cxl_page_init(bool special, cxl_page_t* page, uint64_t block_size)
 {
-    if (page == NULL) {
-        std::cout<<"page == NULL" <<std::endl;
-    }
-    std::cout<<"cxl_page_init block_size1:" << block_size  <<std::endl;
+    //if (page == NULL) {
+    //    std::cout<<"page == NULL" <<std::endl;
+    //}
+    //std::cout<<"cxl_page_init block_size1:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->local_free = 0;
-    std::cout<<"cxl_page_init block_size11:" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size11:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->block_size = block_size;
-    std::cout<<"cxl_page_init block_size111:" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size111:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->used = 0;
-    std::cout<<"cxl_page_init block_size1111:" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size1111:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->next = 0;
-    std::cout<<"cxl_page_init block_size11111:" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size11111:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->prev = 0;
-    std::cout<<"cxl_page_init block_size111111:" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size111111:" << block_size  <<std::endl;
     POTENTIAL_FAULT
     page->is_msg_queue_page = false;
     POTENTIAL_FAULT
 
-    std::cout<<"cxl_page_init block_size2" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size2" << block_size  <<std::endl;
 
     void* page_area = cxl_page_start(cxl_ptr_segment(page), page);
     
-    std::cout<<"cxl_page_init block_size3" << block_size  <<std::endl;
+    //std::cout<<"cxl_page_init block_size3" << block_size  <<std::endl;
     POTENTIAL_FAULT
     cxl_block* start_block = cxl_page_block_at(page_area, block_size, 0);
     POTENTIAL_FAULT
-    std::cout<<"cxl_page_init block_size4," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+    // std::cout<<"cxl_page_init block_size4," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
     cxl_block* last_block = cxl_page_block_at(page_area, block_size, PAGE_SIZE / block_size - 1);
     
-    std::cout<<"cxl_page_init block_size5," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+    // std::cout<<"cxl_page_init block_size5," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
     POTENTIAL_FAULT
     cxl_block* block = start_block;
     POTENTIAL_FAULT
@@ -231,10 +231,10 @@ void cxl_shm::cxl_page_init(bool special, cxl_page_t* page, uint64_t block_size)
     }
     POTENTIAL_FAULT
     last_block->next = page->free;
-    std::cout<<"cxl_page_init block_size11," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+    // std::cout<<"cxl_page_init block_size11," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
     POTENTIAL_FAULT
     page->free = get_offset_for_data(start, start_block);
-    std::cout<<"cxl_page_init block_size12," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
+    // std::cout<<"cxl_page_init block_size12," << block_size << ",PAGE_SIZE" << PAGE_SIZE <<std::endl;
     POTENTIAL_FAULT
 }
 

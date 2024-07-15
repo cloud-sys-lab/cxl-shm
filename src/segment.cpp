@@ -52,11 +52,11 @@ cxl_segment_t* cxl_shm::cxl_segment_alloc()
     do {
         POTENTIAL_FAULT
         count++;
-        std::cout << "SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << std::endl;
-        std::cout << "size: " << size << std::endl;
+        // std::cout << "SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << std::endl;
+        // std::cout << "size: " << size << std::endl;
         if(SEGMENTS_AREA_START + count*SEGMENT_SIZE > size)
         {
-            std::cout<<"memory alloc fail for no more segment"<<std::endl;
+            // std::cout<<"memory alloc fail for no more segment"<<std::endl;
             return NULL;
         }
         POTENTIAL_FAULT
