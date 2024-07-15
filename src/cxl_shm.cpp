@@ -19,6 +19,10 @@ uint32_t cxl_shm::get_thread_id()
     return thread_id;
 }
 
+uint64_t cxl_shm::get_tls_offset() {
+    return tls_offset;
+};
+
 cxl_shm::cxl_shm(uint64_t _size, int _shm_id)
 {
     size = _size;

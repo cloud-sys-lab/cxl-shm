@@ -6,20 +6,31 @@
 #include <unistd.h>
 #include <future>
 
+#include "cxlmalloc-types.h"
 #include "cxlmalloc.h"
 #include "cxlmalloc-internal.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include "test_helper.h"
 
-# define DATA_SIZE_BLOCK 128
-# define DATA_SIZE_MESSAGE 600
+#include "cxlmalloc.h"
+#include "cxlmalloc-internal.h"
+#include "cxlmalloc-types.h"
+
+// 将macro 改成 global variable 以方便调用
+// # define DATA_SIZE_BLOCK 128
+// # define DATA_SIZE_MESSAGE 600
+
+int counter;
+int DATA_SIZE_BLOCK;
+int DATA_SIZE_MESSAGE;
 
 //# define THREAD2 1
 //# define THREAD3 1
 
 size_t length;
 int shm_id;
+
 
 void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
 {
@@ -31,20 +42,47 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
     offset.set_value(r1.get_tbr()->pptr);
 }
 
+
 void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<std::chrono::time_point<std::chrono::system_clock> > &t_receiver)
 {
     // sleep(3);
     cxl_shm shm = cxl_shm(length, shm_id);
+
     shm.thread_init();
     void* start = shm.get_start();
-    for (int i = DATA_SIZE_BLOCK; i <= DATA_SIZE_BLOCK; i+=DATA_SIZE_BLOCK) {
+
+    auto t_start = std::chrono::high_resolution_clock::now();
+    cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, queue_offset);
+    std::cout << "inside of cxl_unwrap_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    POTENTIAL_FAULT
+    // update receiver queue
+    cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, shm.get_tls_offset());
+
+    if(q->receiver_id == 0)
+    {
+        POTENTIAL_FAULT
+        q->receiver_next = tls->receiver_queue;
+        POTENTIAL_FAULT
+        tls->receiver_queue = queue_offset;
+        POTENTIAL_FAULT
+        q->receiver_id = shm.get_thread_id();
+    }
+
+    // why this for loop?
+    for (int i = 0; i < counter; i+=1) {
+        auto t_start = std::chrono::high_resolution_clock::now();
+        CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls);
+        std::cout << "duration of cxl_unwrap_wrc" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
         
-        CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset);
-        // auto t_receiver_temp = static_cast<uint64_t>(time(NULL));
         uint64_t obj_offset = r1.data;
+        t_start = std::chrono::high_resolution_clock::now();
         CXLObj* cxl_obj1 = (CXLObj*)get_data_at_addr(start, obj_offset);
+        std::cout << "duration of get_data_at_addr: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+        
+        t_start = std::chrono::high_resolution_clock::now();
         while (cxl_obj1->writer_count != 0) {
         }
+        std::cout << "duration of while loop: " << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
         // offset.set_value(r1.get_tbr()->pptr);
 //        t_receiver.set_value(t_receiver_temp);
     }
@@ -52,17 +90,20 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     auto t_receiver_temp = std::chrono::high_resolution_clock::now();
     t_receiver.set_value(t_receiver_temp);
 }
+
+
 std::vector<size_t> test_sizes = {
         8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
         131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216,
         33554432, 67108864, 134217728};
 
-int main()
-{
+
+auto test_warpper() {
     length = (ZU(1) << 28);
     shm_id = shmget(100, length, IPC_CREAT|0664);
     shmctl(shm_id, IPC_RMID, NULL);
 
+    // 命令行 第二个参数是：DATA_SIZE_BLOCK， 第三个参数是：DATA_SIZE_MESSAGE
     using namespace std;
     length = (ZU(1) << 28);
     shm_id = shmget(100, length, IPC_CREAT|0664);
@@ -110,6 +151,7 @@ int main()
     //     result = (status == r1.get_tbr()->pptr);
     // };
 
+    long t_duration;
     CHECK_BODY("t1 to t2") {
         void* start = shm.get_start();
         //std::cout << "t1 to t2 1111" << std::endl;
@@ -137,12 +179,11 @@ int main()
         // auto t_send = static_cast<uint64_t>(time(NULL));
 
         auto t_start = std::chrono::high_resolution_clock::now();
-           
-         for (int i = DATA_SIZE_BLOCK; i <= DATA_SIZE_MESSAGE; i+=DATA_SIZE_BLOCK) {
+        CXLRef r1 = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
+        for (int i = DATA_SIZE_BLOCK; i <= DATA_SIZE_MESSAGE; i+=DATA_SIZE_BLOCK) {
         //  std::cout << "t1 to t2 i:" << i << std::endl;
             //todo ： 发送的时间-最后一个receiver收到的时间
             
-            CXLRef r1 = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
             
             //std::cout << "t1 to t2 111" << std::endl;
             r1.str_content = "aaa";
@@ -221,8 +262,10 @@ int main()
         // std::cout << "t_all_2 :" << t_all_2 << std::endl;
 
         
-        auto t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
-        std::cout << "t_duration :" << t_duration << std::endl;
+        // auto t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
+        t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
+
+        
         //std::cout << "t1 to t2 5" << std::endl;
         // CXLRef* r1_t2_1 = (CXLRef*)get_data_at_addr(start, status1);
         // CXLRef* r1_t2_2 = (CXLRef*)get_data_at_addr(start, status2);
@@ -238,7 +281,29 @@ int main()
         //std::cout << "t1 to t2 6" << std::endl;
         shmctl(shm_id, IPC_RMID, NULL);
     };
+    return t_duration;
+}
 
-    //std::cout << "print_test_summary" << std::endl;
+int main(int argc, char *argv[])
+{
+    long result = 0;
+    int iter = atoi(argv[1]);
+    DATA_SIZE_BLOCK = atoi(argv[2]);
+    DATA_SIZE_MESSAGE = atoi(argv[3]);
+    counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+    for (int i = 0; i < iter; i++) {
+        // 这里可能有数据溢出的风险。
+        result += test_warpper();
+    }
+
+    /* std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "DATA_SIZE_BLOCK: " << DATA_SIZE_BLOCK << std::endl;
+    std::cout << "DATA_SIZE_MESSAGE: " << DATA_SIZE_MESSAGE << std::endl;
+    std::cout << "average t_duration: " << result / (1.0 * iter) << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << std::endl; */
+    
+    std::cout << "Total: " <<result / (1.0 * iter) << std::endl;
+
     return print_test_summary();
 }

@@ -41,7 +41,11 @@ public:
     bool sent_to(uint64_t queue_offset, CXLRef& ref);
     CXLRef cxl_unwrap(uint64_t offset);
     CXLRef cxl_unwrap_wrc(uint64_t offset);
+    CXLRef cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thread_local_state_t* tls);
     uint64_t create_msg_queue(uint16_t dst_id);
+
+    uint64_t get_tls_offset();
+
 
     // "hash_index.cpp"
     void put(uint64_t key, uint64_t value);

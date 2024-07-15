@@ -8,6 +8,7 @@
 #include <functional>
 #include <iostream>
 #include <atomic>
+#include <chrono>
 
 
 # define ZU(x)  x##ULL
@@ -31,7 +32,7 @@
 # define HASH_TABLE_SIZE             (ZU(1)<<20)
 # define SEGMENTS_AREA_START         (ZU(1)<<27)
 
-# define CXL_BIN_SIZE   (66U)
+# define CXL_BIN_SIZE   (128U)
 // # define CXL_BIN_SIZE (128U)
 //# define CXL_BIN_SIZE   (1024U)
 # define MESSAGE_BUFFER_SIZE (16)
@@ -175,4 +176,7 @@ enum segment_state
     POTENTIAL_LEAKING = 2,
 };
 
+inline long get_duration(std::chrono::time_point<std::chrono::system_clock> t_end, std::chrono::time_point<std::chrono::system_clock> t_start) {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
+}
 #endif
