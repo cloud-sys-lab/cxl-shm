@@ -239,7 +239,7 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
     } while(!refed->ref_info.compare_exchange_weak(ref_info, new_ref_info));
 
     //refed->str_content = str_content;
-    refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
+    //refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
     POTENTIAL_FAULT
     _ref = _refed;
     POTENTIAL_FAULT

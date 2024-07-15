@@ -77,6 +77,7 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
     POTENTIAL_FAULT
     // update receiver queue
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
+
     if(q->receiver_id == 0)
     {
         POTENTIAL_FAULT
@@ -90,7 +91,7 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset)
     std::cout  << "before unwrap while time:" <<  static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     while(q->start == q->end || q->buffer[q->start] == 0) {
         
-        std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
+        //std::cout << "waiting " << "q->start: " << q->start << ", q->end: " << q->end <<"q->buffer[q->start]" << q->buffer[q->start] << std::endl;
     }
     
     std::cout  << "after unwrap while time:" << static_cast<uint64_t>(time(NULL)) << ",start" << q->start << ",end " << q->end << ",q->buffer[q->start]" << q->buffer[q->start] << std::endl;
