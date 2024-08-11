@@ -7,16 +7,21 @@ std::mutex g_pages_mutex;
 cxl_page_t* cxl_shm::cxl_find_page(cxl_page_queue_t* pq)
 {
     POTENTIAL_FAULT
+    
     cxl_page_t* page = get_page_by_offset(pq->first);
+    
+    std::cout << "cxl_find_page pq " << pq << " ,pq->first:" << pq->first  << " ,page: "<< page << std::endl;
     POTENTIAL_FAULT
     if(page != NULL)
     {
         POTENTIAL_FAULT
         cxl_block* const block = get_block_by_offset(page->free);
+        std::cout << "cxl_find_page page != null block:" << block << std::endl;
         POTENTIAL_FAULT
         if(block != NULL) return page;
         else return NULL;
     }
+    std::cout << "cxl_find_page page == null:" << std::endl;
     return NULL;
 }
 
@@ -25,10 +30,13 @@ cxl_block* cxl_shm::cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page)
     POTENTIAL_FAULT
     if(page == NULL)
     {
+        std::cout << "cxl_page_malloc, page == NULL" << std::endl;
         return cxl_malloc_generic(pq, page);
     }
     POTENTIAL_FAULT
     cxl_block* block = get_block_by_offset(page->free);
+    
+    std::cout << "cxl_page_malloc, page != NULL, page->free:" << page->free << " ,block:"<< block << std::endl;
     POTENTIAL_FAULT
     return block;
 }
@@ -41,13 +49,12 @@ RootRef* cxl_shm::thread_base_ref_alloc()
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT
     cxl_page_queue_t* pq = tls->cxl_page_queue(true, 16);
-    // std::cout<<"thread_base_ref_alloc pq" << pq->block_size <<std::endl;
+    std::cout<<"thread_base_ref_alloc pq :" << pq << " ,pq->block_size:" << pq->block_size << " ,pq->first: " << pq->first <<std::endl;
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_find_page(pq);
     POTENTIAL_FAULT
-    
-    // std::cout << "thread_base_ref_alloc p_s" << pq->block_size << std::endl;
     cxl_block* block = cxl_page_malloc(pq, page);
+    std::cout << "thread_base_ref_alloc block:" << block << " ,pq: " << pq << " ,page: " << page << std::endl;
     POTENTIAL_FAULT
     if(block == NULL) return NULL;
     POTENTIAL_FAULT
@@ -62,13 +69,13 @@ RootRef* cxl_shm::thread_base_ref_alloc(cxl_thread_local_state_t* tls)
     // std::lock_guard<std::mutex> guard(g_pages_mutex);
     POTENTIAL_FAULT
     cxl_page_queue_t* pq = tls->cxl_page_queue(true, 16);
-    // std::cout<<"thread_base_ref_alloc pq" << pq->block_size <<std::endl;
+    std::cout<<"tls_thread_base_ref_alloc pq:" << pq << " ,pq->block_size:" << pq->block_size <<" ,pq->first: " << pq->first << std::endl;
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_find_page(pq);
     POTENTIAL_FAULT
-    
-    // std::cout << "thread_base_ref_alloc p_s" << pq->block_size << std::endl;
     cxl_block* block = cxl_page_malloc(pq, page);
+    
+    std::cout << "tls_thread_base_ref_alloc block:" << block << " ,pq: " << pq << " ,page: " << page << std::endl;
     POTENTIAL_FAULT
     if(block == NULL) return NULL;
     POTENTIAL_FAULT
@@ -112,7 +119,7 @@ CXLRef cxl_shm::cxl_ref_alloc_wrc(RootRef* ref, uint64_t block_size, uint64_t em
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_find_page(pq);
     POTENTIAL_FAULT
-    // std::cout << "cxl_ref_alloc_wrc p_s" << pq->block_size << std::endl;
+    std::cout << "cxl_ref_alloc_wrc p_s" << pq->block_size << std::endl;
     cxl_block* block = cxl_page_malloc(pq, page);
     POTENTIAL_FAULT
     uint64_t tbr_offset = get_offset_for_data(start, (void*) ref);
@@ -193,7 +200,6 @@ cxl_message_queue_t* cxl_shm::msg_queue_alloc(uint16_t sender_id, uint16_t recei
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     cxl_page_queue_t* pq = tls->cxl_page_queue(true, sizeof(cxl_message_queue_t));
     cxl_page_t* page = cxl_find_page(pq);
-    // std::cout << "msg_queue_alloc p_s" << pq->block_size << std::endl;
     cxl_block* block = cxl_page_malloc(pq, page);
     if(block == NULL)
     {

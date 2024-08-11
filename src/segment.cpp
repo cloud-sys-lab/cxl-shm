@@ -16,12 +16,14 @@ cxl_page_t* cxl_shm::cxl_segment_page_alloc(uint64_t block_size)
         if(cxl_segment_alloc() == NULL)
         {
             POTENTIAL_FAULT
+            std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc() == NULL,  tls->free_page.first:" << tls->free_page.first <<std::endl;
             return NULL;
         }
         else
         {
             // otherwise try again
             POTENTIAL_FAULT
+            std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc():segment != NULL, page:" << page  <<  ", tls->free_page.first:" << tls->free_page.first <<std::endl;
             return cxl_segment_page_alloc(block_size);
         }
     }
@@ -32,6 +34,7 @@ cxl_page_t* cxl_shm::cxl_segment_page_alloc(uint64_t block_size)
     POTENTIAL_FAULT
     segment->used ++;
     POTENTIAL_FAULT
+    std::cout<<"cxl_segment_page_alloc  segment->used，return了page:" << segment->used  << ", tls->free_page.first:" << tls->free_page.first <<std::endl;
     return page;
 }
 
@@ -52,11 +55,10 @@ cxl_segment_t* cxl_shm::cxl_segment_alloc()
     do {
         POTENTIAL_FAULT
         count++;
-        // std::cout << "SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << std::endl;
-        // std::cout << "size: " << size << std::endl;
+        //std::cout << "COUNT:" << count << " ,SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << ", SEGMENTS_AREA_START:" << SEGMENTS_AREA_START <<  ", SEGMENT_SIZE:" << SEGMENT_SIZE << " , size: " << size << std::endl;
         if(SEGMENTS_AREA_START + count*SEGMENT_SIZE > size)
         {
-            // std::cout<<"memory alloc fail for no more segment"<<std::endl;
+            //std::cout<<"memory alloc fail for no more segment " <<std::endl;
             return NULL;
         }
         POTENTIAL_FAULT

@@ -51,6 +51,7 @@ public:
     void put(uint64_t key, uint64_t value);
     bool get(uint64_t key, uint64_t& value);
     RootRef* thread_base_ref_alloc(cxl_thread_local_state_t* tls);
+    RootRef* thread_base_ref_alloc(void);
 private:
     // "cxl_shm.cpp"
     void link_block_to_tbr(cxl_block* b, RootRef* tbr);
@@ -65,7 +66,6 @@ private:
     // "alloc.cpp"
     cxl_page_t* cxl_find_page(cxl_page_queue_t* pq);
     cxl_block* cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page);
-    RootRef* thread_base_ref_alloc(void);
     
     CXLRef cxl_ref_alloc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);
     CXLRef cxl_ref_alloc_wrc(RootRef* ref, uint64_t block_size, uint64_t embedded_ref_cnt);

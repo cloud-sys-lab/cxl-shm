@@ -56,9 +56,12 @@ void cxl_shm::thread_init()
     uint64_t offset = THREAD_LOCAL_VEC_START - sizeof(cxl_thread_local_state_t);
     cxl_thread_local_state_t* tls;
     do {
+        // std::cout << "thread_init start  loop : " << std::endl;
         offset += sizeof(cxl_thread_local_state_t);
         tls_no_use = 0;
+        // std::cout << "in loop: " <<  "offset " << offset << "sstart:" << start << std::endl;
         tls = (cxl_thread_local_state_t*)get_data_at_addr(start, offset);
+        // std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     } while (!tls->packed_machine_process_id.compare_exchange_weak(tls_no_use, tls_id));
     
     this->tls_offset = offset;
@@ -89,7 +92,7 @@ CXLRef cxl_shm::cxl_malloc_wrc(uint64_t data_size, uint32_t embedded_ref_cnt)
 {
     POTENTIAL_FAULT
     RootRef* tbr = thread_base_ref_alloc();
-    // std::cout << "cxl_malloc_wrc: , tbr.get_tbr()->pptr:" << tbr->pptr << std::endl;
+    std::cout << "cxl_malloc_wrc: , tbr.get_tbr()->pptr:" << tbr->pptr << std::endl;
     POTENTIAL_FAULT
     return cxl_ref_alloc_wrc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
 }
@@ -351,13 +354,18 @@ cxl_page_queue_t* cxl_thread_local_state_s::cxl_page_queue(bool special, uint64_
     {
         if(size == 16)
         {
-            return &pages[0];
+            auto result = &pages[0];
+            std::cout << "   0cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+            return result;
         }
         else if(size == sizeof(cxl_message_queue_t))
         {
-            return &pages[1];
+            auto result = &pages[1];
+            std::cout << "    1cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+            return result;
         }
     }
-    // std::cout << "cxl_page_queue final size" << ((size-1)>>4)+2 << std::endl;
-    return &pages[((size-1)>>4)+2];
+    auto result = &pages[((size-1)>>4)+2];
+    std::cout << "   2cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+    return result;
 }

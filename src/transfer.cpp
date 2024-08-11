@@ -112,6 +112,12 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thre
 
     // std::cout  << "tbr:" << tbr << std::flush;
     //t_start = std::chrono::high_resolution_clock::now();
+    
+    std::cout << "cxl_unwrap_wrc before link_reference, 0 q: " << q << std::endl;
+    std::cout << "cxl_unwrap_wrc before link_reference, 00 q: " << q <<" ,tbr:" << tbr << std::endl;
+    std::cout << "cxl_unwrap_wrc before link_reference, 1tbr->pptr: " << tbr->pptr << " ,q: " << q << std::endl;
+    std::cout << "cxl_unwrap_wrc before link_reference, 2tbr->pptr: " << tbr->pptr << " ,q->start: " << q->start << std::endl;
+    std::cout << "cxl_unwrap_wrc before link_reference, 3q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
     link_reference(tbr->pptr, q->buffer[q->start]);
     // std::cout << "inside of cxl_unwrap_wrc: link_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
     
@@ -120,6 +126,9 @@ CXLRef cxl_shm::cxl_unwrap_wrc(uint64_t offset, cxl_message_queue_t* q, cxl_thre
     POTENTIAL_FAULT
     // R2
     //t_start = std::chrono::high_resolution_clock::now();
+    auto a = q->buffer[q->start];
+    std::cout << "cxl_unwrap_wrc before unlink_reference, q->buffer[q->start]: " << a << " ,q->start: " << q->start << std::endl;
+
     unlink_reference(q->buffer[q->start], q->buffer[q->start]);
     // std::cout << "inside of cxl_unwrap_wrc: unlink_reference" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
 

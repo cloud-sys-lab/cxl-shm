@@ -1,16 +1,4 @@
-128Total: 47642
-160Total: 30142.2
-192Total: 29759.2
-224Total: 31192.4
-256Total: 30198.6
-288Total: 30907.6
-320Total: 30092.2
-512Total: 33170
-1024Total: 39055.4
-2048Total: 52114.6
-4096Total: 87436.8
-3264Total: 53625.6
-128Total: 39007.4
-256Total: 31146
-512Total: 29711.4
-1024Total: 29637
+128cxl_page_fresh0  page == NULL
+160cxl_page_fresh0  page == NULL
+192cxl_page_fresh0  page == NULL
+224cxl_page_fresh0  page == NULL
