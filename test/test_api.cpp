@@ -16,7 +16,7 @@
 
 size_t length;
 int shm_id;
-int counter = 2;
+int counter;
 
 int DATA_SIZE_BLOCK = 128;
 int DATA_SIZE_MESSAGE = 128;
@@ -76,8 +76,8 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
 
 }
 
-int main()
-{
+auto test_warpper() {
+
     using namespace std;
     length = (ZU(1) << 28);
     shm_id = shmget(100, length, IPC_CREAT|0664);
@@ -109,14 +109,19 @@ int main()
     //     uint64_t addr = shm.cxl_wrap(ref);
     //     result = (addr != 0);
     // };
-
+    long t_duration;
     CHECK_BODY("data transfer") {
         CXLRef r1 = shm.cxl_malloc(100, 0);
         void* start = shm.get_start();
         uint64_t queue_offset1 = shm.create_msg_queue(2);
-        
+        std::promise<uint64_t> offset_1;
+        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver1;
+
+
         #ifdef THREAD2
         uint64_t queue_offset2 = shm.create_msg_queue(4);
+        std::promise<uint64_t> offset_2;
+        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver2;
         #endif
         std::vector<CXLRef> block_vec;
         for (int i = 0; i < counter; i++) { //push
@@ -124,6 +129,8 @@ int main()
             block_vec.push_back(r);
         }
 
+
+        auto t_start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < counter; i++) { //send
             CXLRef r1 = block_vec[i];
             uint64_t obj_offset = r1.data;
@@ -155,19 +162,12 @@ int main()
             // bool send_res3    = shm.sent_to(queue_offset3, r1);
             // #endif
         }
-
-
-
-        std::promise<uint64_t> offset_1;
-        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver1;
         
         std::cout << "start thread1:" << queue_offset1 << std::endl;
         std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
         sleep(1);
+        
         #ifdef THREAD2
-
-        std::promise<uint64_t> offset_2;
-        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver2;
         std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
         #endif
         //std::cout << "test_warpper thread1 queue_offset1:" << queue_offset1 << std::endl;
@@ -191,9 +191,37 @@ int main()
         //auto status = offset_2.get_future().get();
         //std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
         //result = (status == r1.get_tbr()->pptr);
+        
+        t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
     };
 
     shmctl(shm_id, IPC_RMID, NULL);
+
+    return t_duration;
+}
+
+int main(int argc, char *argv[])
+{
+    
+    long result = 0;
+    int iter = atoi(argv[1]);
+    DATA_SIZE_BLOCK = atoi(argv[2]);
+    DATA_SIZE_MESSAGE = atoi(argv[3]);
+    //counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+    counter = 1;
+    for (int i = 0; i < iter; i++) {
+        // 这里可能有数据溢出的风险。
+        result += test_warpper();
+    }
+
+    /* std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "DATA_SIZE_BLOCK: " << DATA_SIZE_BLOCK << std::endl;
+    std::cout << "DATA_SIZE_MESSAGE: " << DATA_SIZE_MESSAGE << std::endl;
+    std::cout << "average t_duration: " << result / (1.0 * iter) << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << std::endl; */
+    
+    std::cout << "Total: " <<result / (1.0 * iter) << std::endl;
 
     return print_test_summary();
 }
