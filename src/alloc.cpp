@@ -10,18 +10,18 @@ cxl_page_t* cxl_shm::cxl_find_page(cxl_page_queue_t* pq)
     
     cxl_page_t* page = get_page_by_offset(pq->first);
     
-    //std::cout << "cxl_find_page pq " << pq << " ,pq->first:" << pq->first  << " ,page: "<< page << std::endl;
+    std::cout << "cxl_find_page pq " << pq << " ,pq->first:" << pq->first  << " ,page: "<< page << std::endl;
     POTENTIAL_FAULT
     if(page != NULL)
     {
         POTENTIAL_FAULT
         cxl_block* const block = get_block_by_offset(page->free);
-        //std::cout << "cxl_find_page page != null block:" << block << std::endl;
+        std::cout << "cxl_find_page page != null block:" << block << std::endl;
         POTENTIAL_FAULT
         if(block != NULL) return page;
         else return NULL;
     }
-    //std::cout << "cxl_find_page page == null:" << std::endl;
+    std::cout << "cxl_find_page page == null:" << std::endl;
     return NULL;
 }
 
@@ -30,7 +30,7 @@ cxl_block* cxl_shm::cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page)
     POTENTIAL_FAULT
     if(page == NULL)
     {
-        //std::cout << "cxl_page_malloc, page == NULL" << std::endl;
+        std::cout << "cxl_page_malloc, page == NULL" << std::endl;
         return cxl_malloc_generic(pq, page);
     }
     POTENTIAL_FAULT
@@ -44,17 +44,17 @@ cxl_block* cxl_shm::cxl_page_malloc(cxl_page_queue_t* pq, cxl_page_t* &page)
 RootRef* cxl_shm::thread_base_ref_alloc()
 {
     // 可以优化加锁的位置
-    // std::lock_guard<std::mutex> guard(g_pages_mutex);
+    //std::lock_guard<std::mutex> guard(g_pages_mutex);
     POTENTIAL_FAULT
     cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, tls_offset);
     POTENTIAL_FAULT
     cxl_page_queue_t* pq = tls->cxl_page_queue(true, 16);
-    //std::cout<<"thread_base_ref_alloc pq :" << pq << " ,pq->block_size:" << pq->block_size << " ,pq->first: " << pq->first <<std::endl;
+    std::cout<<" \n \n thread_base_ref_alloc pq :" << pq << " ,pq->block_size:" << pq->block_size << " ,pq->first: " << pq->first <<std::endl;
     POTENTIAL_FAULT
     cxl_page_t* page = cxl_find_page(pq);
     POTENTIAL_FAULT
     cxl_block* block = cxl_page_malloc(pq, page);
-    //std::cout << "thread_base_ref_alloc block:" << block << " ,pq: " << pq << " ,page: " << page << std::endl;
+    std::cout << " \n \n thread_base_ref_alloc block:" << block << " ,pq: " << pq << " ,page: " << page << std::endl;
     POTENTIAL_FAULT
     if(block == NULL) return NULL;
     POTENTIAL_FAULT

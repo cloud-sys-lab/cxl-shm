@@ -92,7 +92,7 @@ CXLRef cxl_shm::cxl_malloc_wrc(uint64_t data_size, uint32_t embedded_ref_cnt)
 {
     POTENTIAL_FAULT
     RootRef* tbr = thread_base_ref_alloc();
-    std::cout << "cxl_malloc_wrc: , tbr.get_tbr()->pptr:" << tbr->pptr << std::endl;
+    //std::cout << "cxl_malloc_wrc: , tbr.get_tbr()->pptr:" << tbr->pptr << std::endl;
     POTENTIAL_FAULT
     return cxl_ref_alloc_wrc(tbr, data_size + sizeof(CXLObj), embedded_ref_cnt);
 }
@@ -248,6 +248,8 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
     //refed->str_content = str_content;
     //refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
     POTENTIAL_FAULT
+    std::cout<<"link_reference  _refed: " << _refed << std::endl;
+    std::cout<<"link_reference  _ref: " << _ref << std::endl;
     _ref = _refed;
     POTENTIAL_FAULT
 

@@ -28,7 +28,7 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     POTENTIAL_FAULT
     // S2
     q->end = (q->end + 1) % MESSAGE_BUFFER_SIZE;
-    std::cout  << " sent_to after link q->start: " << q->start << " ,q->end： " << q->end << " ,ref.get_tbr()->pptr: " <<offset<<" ,q->buffer[q->end]: " <<q->buffer[q->end] << " ,q->buffer[q->end-1]: " <<q->buffer[q->end-1] << " ,queue_offset: " << queue_offset << std::endl;
+    std::cout  << " sent_to after link q->start: " << q->start << " ,q->end： " << q->end << " ,ref.get_tbr()->pptr: " << offset <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << " ,q->buffer[q->end-1]: " <<q->buffer[q->end-1] << " ,queue_offset: " << queue_offset << std::endl;
     POTENTIAL_FAULT
     return true;
 }
@@ -91,16 +91,20 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
         q->receiver_id = thread_id;
     }
     POTENTIAL_FAULT
-    std::cout  << " cxl_unwrap_mend q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     
-    if(q->start == q->end || q->buffer[q->start] == 0) {
-        std::cout  << "cxl_unwrap_mend return CXLRef(this, 0, 0);  "  << std::endl;    
-        return CXLRef(this, 0, 0);   
+    while(q->start == q->end || q->buffer[q->start] == 0) {  
+        //return CXLRef(this, 0, 0);   
     }
+    std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     // R1
     RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
+    
+    std::cout  << " \n cxl_unwrap_mend before link_reference:  q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
+    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr " << tbr << std::endl;
+    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr->pptr: " << tbr->pptr << std::endl;
     link_reference(tbr->pptr, q->buffer[q->start]);
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
