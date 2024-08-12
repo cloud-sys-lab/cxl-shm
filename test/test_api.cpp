@@ -41,36 +41,10 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     void* start = shm.get_start();
     
     auto t_start = std::chrono::high_resolution_clock::now();
-    // cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, queue_offset);
-    
-    // cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, shm.get_tls_offset());
-    // if(q->receiver_id == 0)
-    // {
-    //     POTENTIAL_FAULT
-    //     q->receiver_next = tls->receiver_queue;
-    //     POTENTIAL_FAULT
-    //     tls->receiver_queue = queue_offset;
-    //     POTENTIAL_FAULT
-    //     q->receiver_id = shm.get_thread_id();
-    // }
-    
-    // std::vector<RootRef*> vec;
-    // for (int i = 0; i < counter; i ++) {
-    //     RootRef* tbr0 = shm.thread_base_ref_alloc(tls);
-    //     RootRef* tbr = shm.thread_base_ref_alloc();
-    //     vec.push_back(tbr);
-    //     std::cout << "consumer_wrc add loop tbr0 :" << tbr0  << " ,i: "<< i << " ,queue_offset: "<< queue_offset << std::endl;
-    //     std::cout << "consumer_wrc add loop tbr :" << tbr  << " ,i: "<< i << " ,queue_offset: "<< queue_offset << std::endl;
-        
-    //     std::cout << "consumer_wrc add loop tbr0->pptr :" << tbr0->pptr  << " ,i: "<< i << " ,queue_offset: "<< queue_offset << std::endl;
-    //     std::cout << "consumer_wrc add loop tbr->pptr :" << tbr->pptr  << " ,i: "<< i << " ,queue_offset: "<< queue_offset << std::endl;
-    // }
-
     
     RootRef* tbr;
     for (int i = 0; i < counter; i++) {
-        // tbr = vec[i];
-        std::cout << "cxl_unwrap_wrc before :" << std::endl;
+        std::cout << "cxl_unwrap_wrc before i :" << 1 << " ,queue_offset:" << queue_offset << std::endl;
         
         //CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls, tbr);
         
@@ -135,8 +109,8 @@ int main()
         uint64_t queue_offset1 = shm.create_msg_queue(2);
         uint64_t queue_offset2 = shm.create_msg_queue(4);
         shm.sent_to(queue_offset1, r1);
-        shm.sent_to(queue_offset2, r1);
-        shm.sent_to(queue_offset1, r1);
+        // shm.sent_to(queue_offset1, r1);
+        // shm.sent_to(queue_offset2, r1);
         shm.sent_to(queue_offset2, r1);
 
         std::promise<uint64_t> offset_1;
@@ -152,8 +126,8 @@ int main()
         
         sleep(1);
         //std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2));
-        
-        std::thread t2(consumer_wrc, queue_offset1, std::ref(offset_2), std::ref(t_receiver2));
+
+        std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
         t1.join();
         
         sleep(1);

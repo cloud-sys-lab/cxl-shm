@@ -355,17 +355,17 @@ cxl_page_queue_t* cxl_thread_local_state_s::cxl_page_queue(bool special, uint64_
         if(size == 16)
         {
             auto result = &pages[0];
-            std::cout << "   0cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+            //std::cout << "   0cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
             return result;
         }
         else if(size == sizeof(cxl_message_queue_t))
         {
             auto result = &pages[1];
-            std::cout << "    1cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+            //std::cout << "    1cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
             return result;
         }
     }
     auto result = &pages[((size-1)>>4)+2];
-    std::cout << "   2cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
+    //std::cout << "   2cxl_page_queue size: "  << size <<" ,final size: " << ((size-1)>>4)+2 << " , result: "<<  result << std::endl;
     return result;
 }

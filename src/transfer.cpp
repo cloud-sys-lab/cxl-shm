@@ -28,7 +28,7 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     POTENTIAL_FAULT
     // S2
     q->end = (q->end + 1) % MESSAGE_BUFFER_SIZE;
-    // std::cout  << "after  link q->start" << q->start << ",q->end " << q->end << ",offset" <<offset<<",q->buffer[q->end]" <<q->buffer[q->end] << std::endl;
+    std::cout  << " sent_to after link q->start: " << q->start << " ,q->end： " << q->end << " ,ref.get_tbr()->pptr " <<offset<<" ,q->buffer[q->end]: " <<q->buffer[q->end] << "queue_offset" << queue_offset << std::endl;
     POTENTIAL_FAULT
     return true;
 }
@@ -52,6 +52,8 @@ CXLRef cxl_shm::cxl_unwrap(uint64_t offset)
         q->receiver_id = thread_id;
     }
     POTENTIAL_FAULT
+    std::cout  << " cxl_unwrap q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    
     if(q->start == q->end || q->buffer[q->start] == 0) return CXLRef(this, 0, 0);   
     POTENTIAL_FAULT
     // R1

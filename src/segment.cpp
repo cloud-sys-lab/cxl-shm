@@ -16,14 +16,14 @@ cxl_page_t* cxl_shm::cxl_segment_page_alloc(uint64_t block_size)
         if(cxl_segment_alloc() == NULL)
         {
             POTENTIAL_FAULT
-            std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc() == NULL,  tls->free_page.first:" << tls->free_page.first <<std::endl;
+            //std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc() == NULL,  tls->free_page.first:" << tls->free_page.first <<std::endl;
             return NULL;
         }
         else
         {
             // otherwise try again
             POTENTIAL_FAULT
-            std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc():segment != NULL, page:" << page  <<  ", tls->free_page.first:" << tls->free_page.first <<std::endl;
+            //std::cout<<"cxl_segment_page_alloc  cxl_segment_alloc():segment != NULL, page:" << page  <<  ", tls->free_page.first:" << tls->free_page.first <<std::endl;
             return cxl_segment_page_alloc(block_size);
         }
     }
@@ -34,7 +34,7 @@ cxl_page_t* cxl_shm::cxl_segment_page_alloc(uint64_t block_size)
     POTENTIAL_FAULT
     segment->used ++;
     POTENTIAL_FAULT
-    std::cout<<"cxl_segment_page_alloc  segment->used，return了page:" << segment->used  << ", tls->free_page.first:" << tls->free_page.first <<std::endl;
+    //std::cout<<"cxl_segment_page_alloc  segment->used，return了page:" << segment->used  << ", tls->free_page.first:" << tls->free_page.first <<std::endl;
     return page;
 }
 
