@@ -12,9 +12,11 @@
 #include <sys/shm.h>
 #include "test_helper.h"
 
+# define THREAD2 = 1
+
 size_t length;
 int shm_id;
-int counter = 1;
+int counter = 2;
 
 int DATA_SIZE_BLOCK = 128;
 int DATA_SIZE_MESSAGE = 128;
@@ -47,11 +49,11 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     
     RootRef* tbr;
     for (int i = 0; i < counter; i++) {
-        std::cout << "cxl_unwrap_wrc before i :" << 1 << " ,queue_offset:" << queue_offset << std::endl;
+        std::cout << "cxl_unwrap_wrc before i :" << i << " ,queue_offset:" << queue_offset << std::endl;
         
         //CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls, tbr);
         
-        CXLRef r1 = shm.cxl_unwrap(queue_offset);
+        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
         std::cout << "cxl_unwrap_wrc after :" << std::endl;
         std::cout << "cxl_unwrap_wrc after r1.get_tbr():" << r1.get_tbr() << std::endl;
         std::cout << "cxl_unwrap_wrc after r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
@@ -63,9 +65,10 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
         while (cxl_obj1->writer_count != 0) {
         }
         
-        auto t_receiver_temp = std::chrono::high_resolution_clock::now();
-        t_receiver.set_value(t_receiver_temp);
+  
     }
+    auto t_receiver_temp = std::chrono::high_resolution_clock::now();
+    t_receiver.set_value(t_receiver_temp);
     //CXLRef r1 = shm.cxl_unwrap(queue_offset);
     // std::cout<<"consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
     // std::cout<<"consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
@@ -116,12 +119,12 @@ int main()
         uint64_t queue_offset2 = shm.create_msg_queue(4);
         #endif
         std::vector<CXLRef> block_vec;
-        for (int i = 0; i < counter; i++) {
+        for (int i = 0; i < counter; i++) { //push
             CXLRef r = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
             block_vec.push_back(r);
         }
 
-        for (int i = 0; i < counter; i++) {
+        for (int i = 0; i < counter; i++) { //send
             CXLRef r1 = block_vec[i];
             uint64_t obj_offset = r1.data;
             CXLObj* cxl_obj = (CXLObj*)get_data_at_addr(start, obj_offset);
@@ -157,6 +160,8 @@ int main()
 
         std::promise<uint64_t> offset_1;
         std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver1;
+        
+        std::cout << "start thread1:" << queue_offset1 << std::endl;
         std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
         sleep(1);
         #ifdef THREAD2
