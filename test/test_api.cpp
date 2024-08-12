@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
     int iter = atoi(argv[1]);
     DATA_SIZE_BLOCK = atoi(argv[2]);
     DATA_SIZE_MESSAGE = atoi(argv[3]);
-    //counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
-    counter = 1;
+    counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+    //counter = 1;
     for (int i = 0; i < iter; i++) {
         // 这里可能有数据溢出的风险。
         result += test_warpper();
