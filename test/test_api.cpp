@@ -48,14 +48,38 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     
     auto t_start = std::chrono::high_resolution_clock::now();
     
+    
+    std::vector<cxl_message_queue_t*> vec_q;
+    std::vector<RootRef*> vec_tbr;
+    
+    for (int i = 0; i < counter; i ++) {
+        cxl_message_queue_t* q0 = (cxl_message_queue_t*) get_data_at_addr(start, queue_offset);
+        vec_q.push_back(q0);
+        POTENTIAL_FAULT
+        cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, shm.get_tls_offset());
+        if(q0->receiver_id == 0)
+        {
+            POTENTIAL_FAULT
+            q0->receiver_next = tls->receiver_queue;
+            POTENTIAL_FAULT
+            tls->receiver_queue = queue_offset;
+            POTENTIAL_FAULT
+            q0->receiver_id = shm.get_thread_id();
+        }
+        RootRef* tbr0 = shm.thread_base_ref_alloc(tls);
+        vec_tbr.push_back(tbr0);
+    }
+
+    cxl_message_queue_t* q ;
     RootRef* tbr;
     for (int i = 0; i < counter; i++) {
+        q = vec_q[i];
+        tbr = vec_tbr[i];
         std::cout << "consumer_wrc before cxl_unwrap_mend i :" << i << " ,queue_offset:" << queue_offset << std::endl;
         
-        //CXLRef r1 = shm.cxl_unwrap_wrc(queue_offset, q, tls, tbr);
+        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset, q, tbr);
         
-        
-        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
+        //CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
         std::cout << "\n \n consumer_wrc cxl_unwrap_mend after :" << std::endl;
         std::cout << "consumer_wrc cxl_unwrap_mend after r1.get_tbr():" << r1.get_tbr() << std::endl;
         std::cout << "consumer_wrc cxl_unwrap_mend after r1.get_tbr()->pptr:" << r1.get_tbr()->pptr << std::endl;
