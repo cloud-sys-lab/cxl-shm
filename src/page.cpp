@@ -20,13 +20,13 @@ cxl_block* cxl_shm::cxl_malloc_generic(cxl_page_queue_t* pq, cxl_page_t* &page)
     POTENTIAL_FAULT
     if(page == NULL) 
     {
-        std::cout << "cxl_malloc_generic page == NULL" << std::endl;
+        //std::cout << "cxl_malloc_generic page == NULL" << std::endl;
         return NULL;
     }
     else
     {
         POTENTIAL_FAULT
-        std::cout << "cxl_malloc_generic page != NULL" << std::endl;
+        //std::cout << "cxl_malloc_generic page != NULL" << std::endl;
         return cxl_page_malloc(pq, page);
     }
 }
@@ -109,20 +109,20 @@ void cxl_shm::cxl_thread_free_collect(cxl_page_t* page)
 cxl_page_t* cxl_shm::cxl_page_queue_find_free_ex(cxl_page_queue_t* pq)
 {
     POTENTIAL_FAULT
-    std::cout << "cxl_page_queue_find_free_ex, pq->first :" << pq->first << std::endl;
+    //std::cout << "cxl_page_queue_find_free_ex, pq->first :" << pq->first << std::endl;
     cxl_page_t* page = pq->first == 0 ? NULL : (cxl_page_t*)get_data_at_addr(start, pq->first);
     POTENTIAL_FAULT
     while (page != NULL)
     {
         POTENTIAL_FAULT
         cxl_page_t* next = get_page_by_offset(page->next);
-        std::cout << "cxl_page_queue_find_free_ex, page != NULL  next:" << next << std::endl;
+        //std::cout << "cxl_page_queue_find_free_ex, page != NULL  next:" << next << std::endl;
         POTENTIAL_FAULT
         cxl_page_free_collect(page);
         POTENTIAL_FAULT
         if(page->free != 0)
         {
-            std::cout << "cxl_page_queue_find_free_ex, page->free != 0 :" << page->free << std::endl;
+            //std::cout << "cxl_page_queue_find_free_ex, page->free != 0 :" << page->free << std::endl;
             break;
         }
         POTENTIAL_FAULT
@@ -135,7 +135,7 @@ cxl_page_t* cxl_shm::cxl_page_queue_find_free_ex(cxl_page_queue_t* pq)
         
         page = cxl_page_fresh(pq);
         
-        std::cout << "cxl_page_queue_find_free_ex, page == NULL  cxl_page_fresh(pq):" << page <<  " , pq: "<< pq << std::endl;
+        //std::cout << "cxl_page_queue_find_free_ex, page == NULL  cxl_page_fresh(pq):" << page <<  " , pq: "<< pq << std::endl;
         POTENTIAL_FAULT
     }
 

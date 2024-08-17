@@ -56,12 +56,12 @@ void cxl_shm::thread_init()
     uint64_t offset = THREAD_LOCAL_VEC_START - sizeof(cxl_thread_local_state_t);
     cxl_thread_local_state_t* tls;
     do {
-        // std::cout << "thread_init start  loop : " << std::endl;
+        //std::cout << "thread_init start  loop : " << std::endl;
         offset += sizeof(cxl_thread_local_state_t);
         tls_no_use = 0;
-        // std::cout << "in loop: " <<  "offset " << offset << "sstart:" << start << std::endl;
+        //std::cout << "in loop: " <<  "offset " << offset << "sstart:" << start << std::endl;
         tls = (cxl_thread_local_state_t*)get_data_at_addr(start, offset);
-        // std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
+        //std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     } while (!tls->packed_machine_process_id.compare_exchange_weak(tls_no_use, tls_id));
     
     this->tls_offset = offset;
@@ -248,8 +248,8 @@ void cxl_shm::link_reference(uint64_t& _ref, uint64_t _refed)
     //refed->str_content = str_content;
     //refed->str_content = str_content;    //放到上面更合适，和modCnt放在一起
     POTENTIAL_FAULT
-    std::cout<<"link_reference  _refed: " << _refed << std::endl;
-    std::cout<<"link_reference  _ref: " << _ref << std::endl;
+    // std::cout<<"link_reference  _refed: " << _refed << std::endl;
+    // std::cout<<"link_reference  _ref: " << _ref << std::endl;
     _ref = _refed;
     POTENTIAL_FAULT
 

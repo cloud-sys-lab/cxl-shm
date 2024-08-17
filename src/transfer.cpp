@@ -2,7 +2,9 @@
 #include "cxlmalloc-internal.h"
 #include "cxlmalloc-types.h"
 #include <chrono>
+#include <mutex>
 
+std::mutex g_pages_mutex1;
 uint64_t cxl_shm::cxl_wrap(CXLRef& ref)
 {
     return ref.get_tbr()->pptr;
@@ -28,7 +30,7 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     POTENTIAL_FAULT
     // S2
     q->end = (q->end + 1) % MESSAGE_BUFFER_SIZE;
-    std::cout  << " sent_to after link q->start: " << q->start << " ,q->end： " << q->end << " ,ref.get_tbr()->pptr: " << offset <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << " ,q->buffer[q->end-1]: " <<q->buffer[q->end-1] << " ,queue_offset: " << queue_offset << std::endl;
+    //std::cout  << " sent_to after link q->start: " << q->start << " ,q->end： " << q->end << " ,ref.get_tbr()->pptr: " << offset <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << " ,q->buffer[q->end-1]: " <<q->buffer[q->end-1] << " ,queue_offset: " << queue_offset << std::endl;
     POTENTIAL_FAULT
     return true;
 }
@@ -123,6 +125,7 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
 
 CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset, cxl_message_queue_t* q, RootRef* tbr)
 {
+    //std::lock_guard<std::mutex> guard(g_pages_mutex1);
     POTENTIAL_FAULT
     // cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, offset);
     // POTENTIAL_FAULT
@@ -138,20 +141,20 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset, cxl_message_queue_t* q, RootRef
     //     q->receiver_id = thread_id;
     // }
     POTENTIAL_FAULT
-    std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    //std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     
     while(q->start == q->end || q->buffer[q->start] == 0) {  
         //return CXLRef(this, 0, 0);   
     }
-    std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    //std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     // R1
     //RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
     
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr " << tbr << std::endl;
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr->pptr: " << tbr->pptr << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr " << tbr << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr->pptr: " << tbr->pptr << std::endl;
     link_reference(tbr->pptr, q->buffer[q->start]);
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
@@ -162,7 +165,7 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset, cxl_message_queue_t* q, RootRef
     // R3
     q->start = (q->start + 1) % MESSAGE_BUFFER_SIZE;
     POTENTIAL_FAULT
-    std::cout  << "cxl_unwrap_mend return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));  "  << std::endl;   
+    // std::cout  << "cxl_unwrap_mend return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));  "  << std::endl;   
     return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));
 
 }
