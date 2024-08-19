@@ -14,8 +14,8 @@
 #include "test_helper.h"
 
 # define THREAD2 = 1
-# define THREAD3 = 1
-//# define BEFORE_START_THREAD = 1
+//# define THREAD3 = 1
+# define BEFORE_START_THREAD = 1
 
 size_t length;
 int shm_id;
@@ -105,6 +105,21 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset,  std::p
 
 }
 
+
+long t_duration;
+
+auto calculateTimeEnd(std::chrono::time_point<std::chrono::system_clock> t_start, std::chrono::time_point<std::chrono::system_clock> t_end) -> long {
+    t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
+    #ifdef THREAD2
+    t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start - std::chrono::seconds(1)).count();
+    #endif
+    #ifdef THREAD3
+    t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start - std::chrono::seconds(2)).count();
+    #endif
+    return t_duration;
+}
+
+
 auto test_warpper() {
 
     using namespace std;
@@ -138,7 +153,6 @@ auto test_warpper() {
     //     uint64_t addr = shm.cxl_wrap(ref);
     //     result = (addr != 0);
     // };
-    long t_duration;
     //CHECK_BODY("data transfer") {
         CXLRef r1 = shm.cxl_malloc(100, 0);
         void* start = shm.get_start();
@@ -160,14 +174,28 @@ auto test_warpper() {
         std::vector<CXLRef> block_vec;
 
         #ifdef BEFORE_START_THREAD
-        std::cout << "\n \n \n start thread1:" << queue_offset1 << std::endl;
-        std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
-        sleep(2);
-        #ifdef THREAD2
-        std::cout << "\n \n \n start thread2:" << queue_offset2 << std::endl;
-        std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
-        #endif
-        sleep(2);
+            std::cout << "\n \n \n start thread1:" << queue_offset1 << std::endl;
+            std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
+
+            auto t_b_s = std::chrono::high_resolution_clock::now();
+            //std::cout << "before sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_b_s - t_start).count() << std::endl;
+            
+            sleep(1);
+            auto t_a_s = std::chrono::high_resolution_clock::now();
+            //std::cout << "after sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_a_s - t_start).count() << std::endl;
+            
+            
+            
+            #ifdef THREAD2
+            std::cout << "\n \n \n start thread2:" << queue_offset2 << std::endl;
+            std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
+            #endif
+            sleep(1);
+            #ifdef THREAD3
+            //std::cout << "\n \n \n start thread3:" << queue_offset2 << std::endl;
+            std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
+            #endif
+            //sleep(1);
         #endif
 
         for (int i = 0; i < counter; i++) { //push
@@ -211,32 +239,32 @@ auto test_warpper() {
             // #ifdef THREAD3
             // bool send_res3    = shm.sent_to(queue_offset3, r1);
             // #endif
-        }
+        } //after send
         
         #ifdef BEFORE_START_THREAD
-        #else
-        //std::cout << "\n \n \n start thread1:" << queue_offset1 << std::endl;
-        std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
+            #else
+            //std::cout << "\n \n \n start thread1:" << queue_offset1 << std::endl;
+            std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
 
-        auto t_b_s = std::chrono::high_resolution_clock::now();
-        //std::cout << "before sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_b_s - t_start).count() << std::endl;
-        
-        sleep(1);
-        auto t_a_s = std::chrono::high_resolution_clock::now();
-        //std::cout << "after sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_a_s - t_start).count() << std::endl;
-        
-        
-        
-        #ifdef THREAD2
-        //std::cout << "\n \n \n start thread2:" << queue_offset2 << std::endl;
-        std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
-        #endif
-        sleep(1);
-        #ifdef THREAD3
-        //std::cout << "\n \n \n start thread3:" << queue_offset2 << std::endl;
-        std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
-        #endif
-        //sleep(1);
+            auto t_b_s = std::chrono::high_resolution_clock::now();
+            //std::cout << "before sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_b_s - t_start).count() << std::endl;
+            
+            sleep(1);
+            auto t_a_s = std::chrono::high_resolution_clock::now();
+            //std::cout << "after sleep:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t_a_s - t_start).count() << std::endl;
+            
+            
+            
+            #ifdef THREAD2
+            //std::cout << "\n \n \n start thread2:" << queue_offset2 << std::endl;
+            std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
+            #endif
+            sleep(1);
+            #ifdef THREAD3
+            //std::cout << "\n \n \n start thread3:" << queue_offset2 << std::endl;
+            std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
+            #endif
+            //sleep(1);
         #endif
 
         //std::cout << "test_warpper thread1 queue_offset1:" << queue_offset1 << std::endl;
@@ -265,18 +293,18 @@ auto test_warpper() {
         #endif
         //sleep(1);
         
-        //std::cout  << "1111: status"  << std::endl;
+        // std::cout  << "1111: status"  << std::endl;
         //auto status = offset_2.get_future().get();
         //std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
         //result = (status == r1.get_tbr()->pptr);
         
-        t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
     //};
 
+    auto time_total =  calculateTimeEnd(t_start, t_end);
     shmctl(shm_id, IPC_RMID, NULL);
-
-    return t_duration;
+    return time_total;
 }
+
 
 int main(int argc, char *argv[])
 {

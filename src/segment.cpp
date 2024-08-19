@@ -60,7 +60,7 @@ cxl_segment_t* cxl_shm::cxl_segment_alloc()
 
         if(SEGMENTS_AREA_START + count*SEGMENT_SIZE > size)
         {
-            //std::cout<<"cxl_segment_alloc break loop memory alloc fail for no more segment , data: "  << data << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed)<<std::endl;
+            std::cout<<"cxl_segment_alloc break loop memory alloc fail for no more segment , data: "  << data << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed)<<std::endl;
             return NULL;
         }
         POTENTIAL_FAULT
@@ -70,18 +70,18 @@ cxl_segment_t* cxl_shm::cxl_segment_alloc()
         POTENTIAL_FAULT
         data = get_data_at_addr(start, offset - sizeof(cxl_segment_allocation_state_t));
         POTENTIAL_FAULT
-        // std::cout << "cxl_segment_alloc  COUNT:" << count << "  ,data: " << data
-        //  << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " 
-        //  << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed) 
-        //  << "  ,&saf_no_use: " << &sas_no_use << " ,sas_no_use:" << sas_no_use 
-        //  <<"  ,thread_id: "  << thread_id 
-        // //<< " ,std::memory_order_relaxed: "<< std::memory_order_relaxed
-        //  //<<" ,std::memory_order_release: " << std::memory_order_release
-        //   << " ,SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << ", SEGMENTS_AREA_START:" << SEGMENTS_AREA_START << 
-        //  ", SEGMENT_SIZE:" << SEGMENT_SIZE << " , size: " << size << std::endl;
+        std::cout << "cxl_segment_alloc  COUNT:" << count << "  ,data: " << data
+         << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " 
+         << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed) 
+         << "  ,&saf_no_use: " << &sas_no_use << " ,sas_no_use:" << sas_no_use 
+         <<"  ,thread_id: "  << thread_id 
+        //<< " ,std::memory_order_relaxed: "<< std::memory_order_relaxed
+         //<<" ,std::memory_order_release: " << std::memory_order_release
+          << " ,SEGMENTS_AREA_START + count*SEGMENT_SIZE: " << SEGMENTS_AREA_START + count*SEGMENT_SIZE << ", SEGMENTS_AREA_START:" << SEGMENTS_AREA_START << 
+         ", SEGMENT_SIZE:" << SEGMENT_SIZE << " , size: " << size << std::endl;
          
     } while(!std::atomic_compare_exchange_weak_explicit((std::atomic<uint32_t> *) data, &sas_no_use, thread_id, std::memory_order_release, std::memory_order_relaxed));
-    //std::cout << "cxl_segment_alloc  after loop data:" << data << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed) << (std::atomic<uint32_t> *) data << std::endl;
+    std::cout << "cxl_segment_alloc  after loop data:" << data << "  ,((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed): " << ((std::atomic<uint32_t> *) data)->load(std::memory_order_relaxed) << (std::atomic<uint32_t> *) data << std::endl;
         
     POTENTIAL_FAULT
     cxl_segment_allocation_state_t* sas = (cxl_segment_allocation_state_t*) data;

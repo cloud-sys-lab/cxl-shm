@@ -1,9 +1,10 @@
 #!/bin/bash
-rm result_t3.log
+RESULT_FILE="result_t2.log"
+rm "$RESULT_FILE"
 # echo "test single thread consumer without thread" >> result.log
 
+# DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096")
 DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096")
-
 
 # for size in "${DATA_SIZE_MESSAGE[@]}"
 # do
@@ -18,7 +19,7 @@ for size in "${DATA_SIZE_MESSAGE[@]}"
 do
     for size_block in "${DATA_SIZE_BLOCK[@]}"
     do
-        echo -n "DATA_SIZE_BLOCK: $size_block DATA_SIZE_MESSAGE $size " >> result_t3.log
-       ./build/cxlmalloc-test-api 3 $size_block $size >> result_t3.log
+        echo -n "DATA_SIZE_BLOCK: $size_block DATA_SIZE_MESSAGE $size " >> "$RESULT_FILE"
+       ./build/cxlmalloc-test-api 3 $size_block $size >> "$RESULT_FILE"
     done
 done
