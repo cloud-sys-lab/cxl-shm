@@ -63,7 +63,9 @@ void cxl_shm::thread_init()
         tls = (cxl_thread_local_state_t*)get_data_at_addr(start, offset);
         //std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     } while (!tls->packed_machine_process_id.compare_exchange_weak(tls_no_use, tls_id));
+    std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     
+
     this->tls_offset = offset;
     this->thread_id = (offset - THREAD_LOCAL_VEC_START) / sizeof(cxl_thread_local_state_t) + 1;
     tls->pages[0] = {0, 0, 16};

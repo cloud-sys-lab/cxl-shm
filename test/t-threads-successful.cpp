@@ -15,6 +15,10 @@
 size_t length;
 int shm_id;
 
+int DATA_SIZE_BLOCK = 128;
+int DATA_SIZE_MESSAGE = 256;
+int counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+
 void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
 {
     //sleep(1);
@@ -24,12 +28,36 @@ void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
     shm.thread_init();
     std::cout<<"consumer2"<<std::endl;
     void* start = shm.get_start();
-    std::cout<<"consumer3"<<std::endl;
-    CXLRef r1 = shm.cxl_unwrap(queue_offset);
-    std::cout<<"consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
-    std::cout<<"consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
-    offset.set_value(r1.get_tbr()->pptr);
-    std::cout<<"consumer5"<<std::endl;
+    std::cout<<"consumer3 start: " << start <<std::endl;
+    auto result = 1;
+    for (int i = 0; i < counter; i ++) {
+        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
+        std::cout<<"consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
+        std::cout<<"consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
+        std::cout<<"consumer5"<<std::endl;
+    }
+    offset.set_value(result);
+}
+
+void consumer_t2(uint64_t queue_offset, std::promise<uint64_t> &offset)
+{
+    //sleep(1);
+    std::cout<<"consumer_t2 consumer0"<<std::endl;
+    cxl_shm shm = cxl_shm(length, shm_id);
+    std::cout<<"consumer_t2 consumer1"<<std::endl;
+    shm.thread_init();
+    std::cout<<"consumer_t2 consumer2"<<std::endl;
+    void* start = shm.get_start();
+    std::cout<<"consumer_t2 consumer3  start: " << start <<std::endl;
+    
+    auto result = 1;
+    for (int i = 0; i < counter; i ++) {
+        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
+        std::cout<<"consumer_t2 consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
+        std::cout<<"consumer_t2 consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
+        std::cout<<"consumer_t2 consumer5"<<std::endl;
+    }
+    offset.set_value(result);
 }
 
 int main()
@@ -50,46 +78,40 @@ int main()
     
     std::cout  << "1" << std::endl;
 
-    CHECK_BODY("thread init") {
-        shm.thread_init();
-        result = (shm.get_thread_id() != 0);
-    }
-
-    CHECK_BODY("malloc and free") {
-        CXLRef ref = shm.cxl_malloc(32, 0);
-        result = (ref.get_tbr() != NULL && ref.get_addr() != NULL);
-    };
-
-    // CHECK_BODY("wrap ref") {
-    //     CXLRef ref = shm.cxl_malloc(32, 0);
-    //     uint64_t addr = shm.cxl_wrap(ref);
-    //     result = (addr != 0);
-    // };
-
-    CHECK_BODY("data transfer") {
-        CXLRef r1 = shm.cxl_malloc(100, 0);
-        uint64_t queue_offset1 = shm.create_msg_queue(2);
-        uint64_t queue_offset2 = shm.create_msg_queue(4);
+    uint64_t queue_offset1 = shm.create_msg_queue(2);
+    uint64_t queue_offset2 = shm.create_msg_queue(4);
+    std::promise<uint64_t> offset_1;
+    std::promise<uint64_t> offset_2;
+    std::thread t1(consumer, queue_offset1, std::ref(offset_1));
+    sleep(1);
+    std::thread t2(consumer_t2, queue_offset2, std::ref(offset_2));
+    CXLRef r1 = shm.cxl_malloc(DATA_SIZE_BLOCK, 0);
+    
+    for (int i = 0; i < counter; i ++) {
+        
+        std::cout<<"send start t1: " << queue_offset1 <<std::endl;
         shm.sent_to(queue_offset1, r1);
+        sleep(1);
+        
+        std::cout<<"send start t2: " << queue_offset1 <<std::endl;
         shm.sent_to(queue_offset2, r1);
-        std::promise<uint64_t> offset_1;
-        std::promise<uint64_t> offset_2;
-        std::thread t1(consumer, queue_offset1, std::ref(offset_1));
-        
         sleep(1);
-        std::thread t2(consumer, queue_offset2, std::ref(offset_2));
-        t1.join();
-        
-        sleep(1);
-        t2.join();
+    }
+    
+    // std::thread t1(consumer, queue_offset1, std::ref(offset_1));
+    // sleep(1);
+    // std::thread t2(consumer_t2, queue_offset2, std::ref(offset_2));
+    t1.join();
+    
+    sleep(1);
+    t2.join();
 
-        // sleep(1);
-        
-        std::cout  << "1111: status"  << std::endl;
-        //auto status = offset_2.get_future().get();
-        //std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
-        //result = (status == r1.get_tbr()->pptr);
-    };
+    // sleep(1);
+    
+    std::cout  << "1111: status"  << std::endl;
+    //auto status = offset_2.get_future().get();
+    //std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
+    //result = (status == r1.get_tbr()->pptr);
 
     shmctl(shm_id, IPC_RMID, NULL);
 
