@@ -1,5 +1,5 @@
 #!/bin/bash
-RESULT_FILE="result_t2.log"
+RESULT_FILE="result_t1.log"
 rm "$RESULT_FILE"
 # echo "test single thread consumer without thread" >> result.log
 

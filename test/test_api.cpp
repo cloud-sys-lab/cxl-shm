@@ -29,7 +29,7 @@ int DATA_SIZE_MESSAGE;
 std::atomic<bool> firstSendDone(false);
 std::atomic<bool> firstUnwrapDone(false);
 
-# define THREAD2 1
+//# define THREAD2 1
 //# define THREAD3 1
 
 size_t length;
@@ -70,8 +70,8 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     
     // RootRef* tbr;
 
-    while (firstUnwrapDone.load(std::memory_order_release));
-    firstUnwrapDone.store(true, std::memory_order_release);
+    // while (firstUnwrapDone.load(std::memory_order_release));
+    // firstUnwrapDone.store(true, std::memory_order_release);
     for (int i = 0; i < counter; i++) {
         // tbr = vec[i];
         CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
@@ -82,7 +82,7 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
         }
     }
     
-    firstUnwrapDone.store(false, std::memory_order_release);
+    // firstUnwrapDone.store(false, std::memory_order_release);
     auto t_receiver_temp = std::chrono::high_resolution_clock::now();
     t_receiver.set_value(t_receiver_temp);
 }
@@ -152,8 +152,8 @@ auto test_warpper() {
                 cxl_obj->writer_count--;
             }
             
-            while (firstSendDone.load(std::memory_order_release));
-            std::atomic_thread_fence(std::memory_order_acquire);
+            // while (firstSendDone.load(std::memory_order_release));
+            // std::atomic_thread_fence(std::memory_order_acquire);
             bool send_res1    = shm.sent_to(queue_offset1, r1);
             
             #ifdef THREAD2
