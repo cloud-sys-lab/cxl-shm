@@ -54,16 +54,26 @@ void cxl_shm::thread_init()
     
     // find the index of thread local state
     uint64_t offset = THREAD_LOCAL_VEC_START - sizeof(cxl_thread_local_state_t);
-    cxl_thread_local_state_t* tls;
+    cxl_thread_local_state_t* tls= nullptr;;
     do {
         //std::cout << "thread_init start  loop : " << std::endl;
         offset += sizeof(cxl_thread_local_state_t);
         tls_no_use = 0;
         //std::cout << "in loop: " <<  "offset " << offset << "sstart:" << start << std::endl;
         tls = (cxl_thread_local_state_t*)get_data_at_addr(start, offset);
+        // Check if tls is a valid pointer
+        if (tls == nullptr) {
+            std::cerr << "Error: could not allocate thread local state" << std::endl;
+            return;
+        }
+        if (offset >= size) {
+            std::cerr << "Error: TLS offset out of range" << std::endl;
+            // Handle the error appropriately
+            return;
+        }
         //std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     } while (!tls->packed_machine_process_id.compare_exchange_weak(tls_no_use, tls_id));
-    std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
+    // std::cout << "thread_init end loop offset: " << offset << ", tls_no_use: " << tls_no_use << " ,tls: " << tls << " , tls->packed_machine_process_id: " << tls->packed_machine_process_id << " ,tls_id: " << tls_id << std::endl;
     
 
     this->tls_offset = offset;

@@ -1,134 +1,221 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <errno.h>
+#include <chrono>
 #include <thread>
 #include <unistd.h>
 #include <future>
 
+#include "cxlmalloc-types.h"
 #include "cxlmalloc.h"
 #include "cxlmalloc-internal.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <vector>
 #include "test_helper.h"
 
-size_t length;
-int shm_id;
+#include "cxlmalloc.h"
+#include "cxlmalloc-internal.h"
+#include "cxlmalloc-types.h"
 
-int DATA_SIZE_BLOCK = 128;
-int DATA_SIZE_MESSAGE = 128;
-int counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+// 将macro 改成 global variable 以方便调用
+// # define DATA_SIZE_BLOCK 128
+// # define DATA_SIZE_MESSAGE 600
+
+int counter;
+int DATA_SIZE_BLOCK;
+int DATA_SIZE_MESSAGE;
 
 std::atomic<bool> firstSendDone(false);
 std::atomic<bool> firstUnwrapDone(false);
 
-void consumer(uint64_t queue_offset, std::promise<uint64_t> &offset)
-{
-    //sleep(1);
-    std::cout<<"consumer0"<<std::endl;
-    cxl_shm shm = cxl_shm(length, shm_id);
-    std::cout<<"consumer1"<<std::endl;
-    shm.thread_init();
-    std::cout<<"consumer2"<<std::endl;
-    void* start = shm.get_start();
-    std::cout<<"consumer3 start: " << start <<std::endl;
-    auto result = 1;
-    for (int i = 0; i < counter; i ++) {
-        CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
-        std::atomic_thread_fence(std::memory_order_release);
-        firstUnwrapDone.store(true, std::memory_order_release);
-        std::cout<<"consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
-        std::cout<<"consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
-        std::cout<<"consumer5"<<std::endl;
-        
-    }
-    offset.set_value(result);
-}
+# define THREAD2 1
+//# define THREAD3 1
 
-void consumer_t2(uint64_t queue_offset, std::promise<uint64_t> &offset)
+size_t length;
+int shm_id;
+
+void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::promise<std::chrono::time_point<std::chrono::system_clock> > &t_receiver)
 {
-    //sleep(1);
-    std::cout<<"consumer_t2 consumer0"<<std::endl;
-    cxl_shm shm = cxl_shm(length, shm_id);
-    std::cout<<"consumer_t2 consumer1"<<std::endl;
-    shm.thread_init();
-    std::cout<<"consumer_t2 consumer2"<<std::endl;
-    void* start = shm.get_start();
-    std::cout<<"consumer_t2 consumer3  start: " << start <<std::endl;
+    // sleep(3);
     
-    auto result = 1;
-    for (int i = 0; i < counter; i ++) {
-        while (!firstUnwrapDone.load(std::memory_order_release));
-        std::atomic_thread_fence(std::memory_order_acquire);
+    cxl_shm shm = cxl_shm(length, shm_id);
+
+    shm.thread_init();
+    void* start = shm.get_start();
+    
+    // auto t_start = std::chrono::high_resolution_clock::now();
+    // cxl_message_queue_t* q = (cxl_message_queue_t*) get_data_at_addr(start, queue_offset);
+    // // std::cout << "inside consumer_wrc: get_data_at_addr" << get_duration(std::chrono::high_resolution_clock::now(), t_start) << std::endl;
+    // POTENTIAL_FAULT
+    // // update receiver queue
+    // cxl_thread_local_state_t* tls = (cxl_thread_local_state_t*) get_data_at_addr(start, shm.get_tls_offset());
+    // //std::cout << "consumer_wrc length :" << length  << " ,shm_id: "<< shm_id <<" ,queue_offset: " << queue_offset  << " ,start: " << start << " , q:" << q << " ,tls: " << tls << " ,q->receiver_id: " << q->receiver_id << " ,shm.get_thread_id(): " << shm.get_thread_id() << std::endl;
+    
+    // if(q->receiver_id == 0)
+    // {
+    //     POTENTIAL_FAULT
+    //     q->receiver_next = tls->receiver_queue;
+    //     POTENTIAL_FAULT
+    //     tls->receiver_queue = queue_offset;
+    //     POTENTIAL_FAULT
+    //     q->receiver_id = shm.get_thread_id();
+    // }
+    // std::vector<RootRef*> vec;
+    // for (int i = 0; i < counter; i ++) {
+    //     RootRef* tbr0 = shm.thread_base_ref_alloc(tls);
+    //     RootRef* tbr = shm.thread_base_ref_alloc();
+    //     vec.push_back(tbr);
+    // }
+    
+    // RootRef* tbr;
+
+    while (firstUnwrapDone.load(std::memory_order_release));
+    firstUnwrapDone.store(true, std::memory_order_release);
+    for (int i = 0; i < counter; i++) {
+        // tbr = vec[i];
         CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
-        std::cout<<"consumer_t2 consumer4 r1.get_tbr():" << r1.get_tbr() <<std::endl;
-        std::cout<<"consumer_t2 consumer4 r1.get_tbr()->pptr:" << r1.get_tbr()->pptr <<std::endl;
-        std::cout<<"consumer_t2 consumer5"<<std::endl;
+        
+        uint64_t obj_offset = r1.data;
+        CXLObj* cxl_obj1 = (CXLObj*)get_data_at_addr(start, obj_offset);
+        while (cxl_obj1->writer_count != 0) {
+        }
     }
-    offset.set_value(result);
+    
+    firstUnwrapDone.store(false, std::memory_order_release);
+    auto t_receiver_temp = std::chrono::high_resolution_clock::now();
+    t_receiver.set_value(t_receiver_temp);
 }
 
+auto test_warpper() {
+    length = (ZU(1) << 28);
+    shm_id = shmget(100, length, IPC_CREAT|0664);
+    shmctl(shm_id, IPC_RMID, NULL);
 
-int main()
-{
+    // 命令行 第二个参数是：DATA_SIZE_BLOCK， 第三个参数是：DATA_SIZE_MESSAGE
     using namespace std;
     length = (ZU(1) << 28);
     shm_id = shmget(100, length, IPC_CREAT|0664);
-    
-    shmctl(shm_id, IPC_RMID, NULL);
-
-
-    length = (ZU(1) << 28);
-    shm_id = shmget(100, length, IPC_CREAT|0664);
     cxl_shm shm = cxl_shm(length, shm_id);
-    
-    std::cout  << "1" << std::endl;
     shm.thread_init();
-    
-    std::cout  << "1" << std::endl;
 
-    uint64_t queue_offset1 = shm.create_msg_queue(2);
-    uint64_t queue_offset2 = shm.create_msg_queue(4);
-    std::promise<uint64_t> offset_1;
-    std::promise<uint64_t> offset_2;
-    std::thread t1(consumer, queue_offset1, std::ref(offset_1));
-    //sleep(1);
-    std::thread t2(consumer_t2, queue_offset2, std::ref(offset_2));
-    CXLRef r1 = shm.cxl_malloc(DATA_SIZE_BLOCK, 0);
-    
-
-    for (int i = 0; i < counter; i ++) {
-        
-        std::cout<<"send start t1: " << queue_offset1 <<std::endl;
-        shm.sent_to(queue_offset1, r1);
-        //sleep(1);
-
-        std::atomic_thread_fence(std::memory_order_release);
-        firstSendDone.store(true, std::memory_order_release);
-        
-        while (!firstSendDone.load(std::memory_order_release));
-        std::atomic_thread_fence(std::memory_order_acquire);
-
-        std::cout<<"send start t2: " << queue_offset1 <<std::endl;
-        shm.sent_to(queue_offset2, r1);
-        
-        //sleep(1);
+    CHECK_BODY("thread init") {
+        shm.thread_init();
+        result = (shm.get_thread_id() != 0);
     }
-    
-    // std::thread t1(consumer, queue_offset1, std::ref(offset_1));
-    // sleep(1);
-    // std::thread t2(consumer_t2, queue_offset2, std::ref(offset_2));
-    t1.join();
-    
-    t2.join();
 
-    
-    std::cout  << "1111: status"  << std::endl;
-    //auto status = offset_2.get_future().get();
-    //std::cout  << "1111: status" << status <<"r1.get_tbr()->pptr" <<r1.get_tbr()->pptr << std::endl;
-    //result = (status == r1.get_tbr()->pptr);
+    long t_duration;
+    CHECK_BODY("t1 to t2") {
+        void* start = shm.get_start();
+        uint64_t queue_offset1 = shm.create_msg_queue(2);
+        // 起t1，循环等待queue的对象
+        std::promise<uint64_t> offset_1;
+        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver1;
+        std::thread t1(consumer_wrc, queue_offset1, std::ref(offset_1), std::ref(t_receiver1));
+        
+        #ifdef THREAD2
+        uint64_t queue_offset2 = shm.create_msg_queue(4);
+        std::promise<uint64_t> offset_2;
+        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver2;
+        
+        std::thread t2(consumer_wrc, queue_offset2, std::ref(offset_2), std::ref(t_receiver2));
+        #endif
 
-    shmctl(shm_id, IPC_RMID, NULL);
+        #ifdef THREAD3
+        uint64_t queue_offset3 = shm.create_msg_queue(4);
+        std::promise<uint64_t> offset_3;
+        std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver3;
+        std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
+        #endif        
+
+        std::vector<CXLRef> block_vec;
+        for (int i = 0; i < counter; i++) {
+            CXLRef r = shm.cxl_malloc_wrc(DATA_SIZE_BLOCK, 0);
+            block_vec.push_back(r);
+        }
+
+        sleep(1);
+        auto t_start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < counter; i++) {
+            CXLRef r1 = block_vec[i];
+            uint64_t obj_offset = r1.data;
+            CXLObj* cxl_obj = (CXLObj*)get_data_at_addr(start, obj_offset);
+
+            while (cxl_obj->reader_count != 0 && cxl_obj->writer_count != 0) {
+                
+            }
+            if (cxl_obj->reader_count == 0 && cxl_obj->writer_count == 0) {
+                cxl_obj->writer_count++;
+                RootRef* tbr1 = (RootRef*) get_data_at_addr(start, r1.tbr);
+                tbr1->ref_cnt++;
+                cxl_obj->str_content = "bbb";
+                cxl_obj->writer_count--;
+            }
+            
+            while (firstSendDone.load(std::memory_order_release));
+            std::atomic_thread_fence(std::memory_order_acquire);
+            bool send_res1    = shm.sent_to(queue_offset1, r1);
+            
+            #ifdef THREAD2
+            
+            std::atomic_thread_fence(std::memory_order_release);
+            firstSendDone.store(true, std::memory_order_release);
+            
+            while (!firstSendDone.load(std::memory_order_release));
+            std::atomic_thread_fence(std::memory_order_acquire);
+
+            bool send_res2    = shm.sent_to(queue_offset2, r1);
+            
+            std::atomic_thread_fence(std::memory_order_release);
+            firstSendDone.store(false, std::memory_order_release);
+
+            #endif
+            #ifdef THREAD3
+            bool send_res3    = shm.sent_to(queue_offset3, r1);
+            #endif
+        }
+        t1.join();
+
+        auto t_real_receive1 = t_receiver1.get_future().get();
+        auto t_end = t_real_receive1;
+        #ifdef THREAD2
+        t2.join();
+        auto t_real_receive2 = t_receiver2.get_future().get();
+        t_end = t_end > t_real_receive2 ? t_end : t_real_receive2;
+        #endif
+
+        #ifdef THREAD3
+        t3.join();
+        auto t_real_receive3 = t_receiver3.get_future().get();
+        t_end = t_end > t_real_receive3 ? t_end : t_real_receive3;
+        #endif
+        t_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start).count();
+        shmctl(shm_id, IPC_RMID, NULL);
+    };
+    return t_duration;
+}
+
+int main(int argc, char *argv[])
+{
+    long result = 0;
+    int iter = atoi(argv[1]);
+    DATA_SIZE_BLOCK = atoi(argv[2]);
+    DATA_SIZE_MESSAGE = atoi(argv[3]);
+    //counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+    counter = 1;
+    for (int i = 0; i < iter; i++) {
+        // 这里可能有数据溢出的风险
+        result += test_warpper();
+    }
+
+    /* std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << "DATA_SIZE_BLOCK: " << DATA_SIZE_BLOCK << std::endl;
+    std::cout << "DATA_SIZE_MESSAGE: " << DATA_SIZE_MESSAGE << std::endl;
+    std::cout << "average t_duration: " << result / (1.0 * iter) << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++" << std::endl;
+    std::cout << std::endl; */
+    
+    std::cout << "Total: " <<result / (1.0 * iter) << std::endl;
 
     return print_test_summary();
 }

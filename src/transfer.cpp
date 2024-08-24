@@ -93,20 +93,20 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
         q->receiver_id = thread_id;
     }
     POTENTIAL_FAULT
-    std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     
     while(q->start == q->end || q->buffer[q->start] == 0) {  
         //return CXLRef(this, 0, 0);   
     }
-    std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     // R1
     RootRef* tbr = thread_base_ref_alloc();
     POTENTIAL_FAULT
     
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr " << tbr << std::endl;
-    std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr->pptr: " << tbr->pptr << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  q->buffer[q->start]: " << q->buffer[q->start] << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr " << tbr << std::endl;
+    // std::cout  << " \n cxl_unwrap_mend before link_reference:  tbr->pptr: " << tbr->pptr << std::endl;
     link_reference(tbr->pptr, q->buffer[q->start]);
     POTENTIAL_FAULT
     tbr->ref_cnt += 1;
@@ -117,7 +117,7 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
     // R3
     q->start = (q->start + 1) % MESSAGE_BUFFER_SIZE;
     POTENTIAL_FAULT
-    std::cout  << "cxl_unwrap_mend return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));  "  << std::endl;   
+    // std::cout  << "cxl_unwrap_mend return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));  "  << std::endl;   
     return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));
 
 }

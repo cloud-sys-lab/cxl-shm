@@ -4,7 +4,7 @@ rm "$RESULT_FILE"
 # echo "test single thread consumer without thread" >> result.log
 
 # DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096")
-DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096")
+DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096" "8192" "16384" "32768")
 
 # for size in "${DATA_SIZE_MESSAGE[@]}"
 # do
@@ -14,12 +14,12 @@ DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512
 # done
 
 # message size 可以小于 block size吗？
-DATA_SIZE_BLOCK=("64" "128" "256" "512" "1024" "2048" "8192" "16384" "32768")
+DATA_SIZE_BLOCK=("64" "128" "256" "512" "1024" "2048")
 for size in "${DATA_SIZE_MESSAGE[@]}"
 do
     for size_block in "${DATA_SIZE_BLOCK[@]}"
     do
-        echo -n "DATA_SIZE_BLOCK: $size_block DATA_SIZE_MESSAGE $size " >> "$RESULT_FILE"
-       ./build/cxlmalloc-test-api 3 $size_block $size >> "$RESULT_FILE"
+        printf "DATA_SIZE_BLOCK: $size_block DATA_SIZE_MESSAGE $size " >> "$RESULT_FILE"
+        ./build/cxlmalloc-test-api 3 $size_block $size >> "$RESULT_FILE"
     done
 done
