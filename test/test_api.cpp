@@ -31,7 +31,7 @@ std::atomic<bool> firstSendDone(false);
 std::atomic<bool> firstUnwrapDone(false);
 
 std::mutex mutex1;
-//# define THREAD2 1
+# define THREAD2 1
 //# define THREAD3 1
 
 size_t length;
