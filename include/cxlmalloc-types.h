@@ -35,7 +35,7 @@
 # define CXL_BIN_SIZE   (128U)
 // # define CXL_BIN_SIZE (128U)
 //# define CXL_BIN_SIZE   (1024U)
-# define MESSAGE_BUFFER_SIZE (16)
+# define MESSAGE_BUFFER_SIZE (1024)
 
 # define MAX_THREAD (1024)
 # define MAX_SEGMENT_NUM (4096)

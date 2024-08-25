@@ -27,8 +27,10 @@ int DATA_SIZE_BLOCK;
 int DATA_SIZE_MESSAGE;
 
 std::atomic<bool> firstSendDone(false);
+
 std::atomic<bool> firstUnwrapDone(false);
 
+std::mutex mutex1;
 //# define THREAD2 1
 //# define THREAD3 1
 
@@ -70,21 +72,38 @@ void consumer_wrc(uint64_t queue_offset, std::promise<uint64_t> &offset, std::pr
     
     // RootRef* tbr;
 
-    // while (firstUnwrapDone.load(std::memory_order_release));
-    // firstUnwrapDone.store(true, std::memory_order_release);
+    while (firstUnwrapDone.load(std::memory_order_release));
+    firstUnwrapDone.store(true, std::memory_order_release);
+    
+    std::atomic_thread_fence(std::memory_order_release);
     for (int i = 0; i < counter; i++) {
+
+        //std::lock_guard<std::mutex> guard(mutex1);
         // tbr = vec[i];
+        //std::cout << "\n before: cxl_unwrap_mend i:" << i << std::endl;
         CXLRef r1 = shm.cxl_unwrap_mend(queue_offset);
         
+        //std::cout << "\n after: cxl_unwrap_mend" << std::endl;
         uint64_t obj_offset = r1.data;
         CXLObj* cxl_obj1 = (CXLObj*)get_data_at_addr(start, obj_offset);
+        
+        //std::cout << "before: cxl_obj1->writer_count != 0" << std::endl;
         while (cxl_obj1->writer_count != 0) {
         }
+        //std::cout << "after: cxl_obj1->writer_count != 0" << std::endl;
     }
-    
-    // firstUnwrapDone.store(false, std::memory_order_release);
+    firstUnwrapDone.store(false, std::memory_order_release);
     auto t_receiver_temp = std::chrono::high_resolution_clock::now();
     t_receiver.set_value(t_receiver_temp);
+}
+
+auto send(cxl_shm shm, uint64_t queue_offset ,CXLRef r1) {
+  
+    std::lock_guard<std::mutex> guard(mutex1);
+    while (firstSendDone.load(std::memory_order_acquire)){};
+    firstSendDone.store(true, std::memory_order_release);
+    bool send_res2    = shm.sent_to(queue_offset, r1);
+    firstSendDone.store(false, std::memory_order_release);
 }
 
 auto test_warpper() {
@@ -122,7 +141,7 @@ auto test_warpper() {
         #endif
 
         #ifdef THREAD3
-        uint64_t queue_offset3 = shm.create_msg_queue(4);
+        uint64_t queue_offset3 = shm.create_msg_queue(6);
         std::promise<uint64_t> offset_3;
         std::promise<std::chrono::time_point<std::chrono::system_clock>> t_receiver3;
         std::thread t3(consumer_wrc, queue_offset3, std::ref(offset_3), std::ref(t_receiver3));
@@ -152,26 +171,37 @@ auto test_warpper() {
                 cxl_obj->writer_count--;
             }
             
-            // while (firstSendDone.load(std::memory_order_release));
-            // std::atomic_thread_fence(std::memory_order_acquire);
-            bool send_res1    = shm.sent_to(queue_offset1, r1);
             
-            #ifdef THREAD2
-            
-            std::atomic_thread_fence(std::memory_order_release);
+            //std::cout << "\n sent_to start i:" << i << std::endl;
+            while (firstSendDone.load(std::memory_order_release));
             firstSendDone.store(true, std::memory_order_release);
-            
-            while (!firstSendDone.load(std::memory_order_release));
             std::atomic_thread_fence(std::memory_order_acquire);
-
-            bool send_res2    = shm.sent_to(queue_offset2, r1);
+            bool send_res1    = shm.sent_to(queue_offset1, r1);
+            firstSendDone.store(false, std::memory_order_release);
+            // send(shm, queue_offset1, r1);
             
-            std::atomic_thread_fence(std::memory_order_release);
+            //std::cout << "sent_to after i:" << i  << std::endl;
+
+            #ifdef THREAD2
+            while (firstSendDone.load(std::memory_order_release));
+            firstSendDone.store(true, std::memory_order_release);
+            std::atomic_thread_fence(std::memory_order_acquire);
+            bool send_res2    = shm.sent_to(queue_offset2, r1);
             firstSendDone.store(false, std::memory_order_release);
 
+//            send(shm, queue_offset2, r1);
             #endif
+
             #ifdef THREAD3
+            
+            //send(shm, queue_offset3, r1);
+            // sleep(1);
+            while (firstSendDone.load(std::memory_order_acquire));
+            firstSendDone.store(true, std::memory_order_release);
+            std::atomic_thread_fence(std::memory_order_acquire);
             bool send_res3    = shm.sent_to(queue_offset3, r1);
+            firstSendDone.store(false, std::memory_order_release);
+            // sleep(1);
             #endif
         }
         t1.join();
@@ -201,8 +231,10 @@ int main(int argc, char *argv[])
     int iter = atoi(argv[1]);
     DATA_SIZE_BLOCK = atoi(argv[2]);
     DATA_SIZE_MESSAGE = atoi(argv[3]);
-    //counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
-    counter = 1;
+    counter = DATA_SIZE_MESSAGE / DATA_SIZE_BLOCK;
+    if (counter == 0) {
+        counter = 1;
+    }
     for (int i = 0; i < iter; i++) {
         // 这里可能有数据溢出的风险
         result += test_warpper();

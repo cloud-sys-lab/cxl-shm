@@ -4,6 +4,8 @@
 #include <chrono>
 #include <mutex>
 
+#include <thread>
+
 std::mutex g_pages_mutex1;
 uint64_t cxl_shm::cxl_wrap(CXLRef& ref)
 {
@@ -20,6 +22,7 @@ bool cxl_shm::sent_to(uint64_t queue_offset, CXLRef& ref)
     POTENTIAL_FAULT
     if(q->end + 1 == q->start || q->end - q->start == MESSAGE_BUFFER_SIZE - 1) 
     {
+        //std::cout  << " sent_to return false q->start: " << q->start << " ,q->end： " << q->end << " ,q->end - q->start: " << q->end - q->start << std::endl;
         return false;
     }
     // S1
@@ -95,9 +98,14 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
     POTENTIAL_FAULT
     // std::cout  << " \n cxl_unwrap_mend before loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     
-    while(q->start == q->end || q->buffer[q->start] == 0) {  
+    //std::cout << "before cxl_unwrap_mend loop  q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
+    while( q->buffer[q->start] == 0) {  
         //return CXLRef(this, 0, 0);   
-    }
+        
+        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        //std::cout  << "cxl_unwrap_mend loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end]  <<" ,q->buffer[q->start]: " <<  q->buffer[q->start]<< std::endl;
+    };
+    //std::cout << "after cxl_unwrap_mend loop   q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     // std::cout  << " \n cxl_unwrap_mend after loop q->start: " << q->start << " ,q->end： " << q->end << " ,offset： " <<offset<< " ,q->buffer[q->start]:" << q->buffer[q->start] <<" ,q->buffer[q->end]: " <<q->buffer[q->end] << std::endl;
     POTENTIAL_FAULT
     // R1
@@ -116,6 +124,8 @@ CXLRef cxl_shm::cxl_unwrap_mend(uint64_t offset)
     POTENTIAL_FAULT
     // R3
     q->start = (q->start + 1) % MESSAGE_BUFFER_SIZE;
+    //std::cout << "after: q->start  reset: " << q->start   << std::endl;
+    
     POTENTIAL_FAULT
     // std::cout  << "cxl_unwrap_mend return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));  "  << std::endl;   
     return CXLRef(this, get_offset_for_data(start, (void*) tbr), tbr->pptr + sizeof(CXLObj));
