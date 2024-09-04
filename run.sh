@@ -1,10 +1,10 @@
 #!/bin/bash
-RESULT_FILE="result_t2.log"
+RESULT_FILE="result_t1.log"
 rm "$RESULT_FILE"
 # echo "test single thread consumer without thread" >> result.log
 
 # DATA_SIZE_MESSAGE=("16" "32" "64" "128" "160" "192" "224" "256" "288" "320" "512" "1024" "2048" "4096")
-DATA_SIZE_MESSAGE=("16" "32" "64" "128" "256" "512" "1024" "2048" "4096" "8192" "16384" "32768" "65536" "131072")
+DATA_SIZE_MESSAGE=("1024" "4096" "16384" "32768")
 
 # for size in "${DATA_SIZE_MESSAGE[@]}"
 # do
